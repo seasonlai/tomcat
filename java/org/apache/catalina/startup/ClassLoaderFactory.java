@@ -161,16 +161,21 @@ public final class ClassLoaderFactory {
         if (repositories != null) {
             for (Repository repository : repositories)  {
                 if (repository.getType() == RepositoryType.URL) {
+                    //创建URL
                     URL url = buildClassLoaderUrl(repository.getLocation());
                     if (log.isDebugEnabled())
                         log.debug("  Including URL " + url);
                     set.add(url);
                 } else if (repository.getType() == RepositoryType.DIR) {
+                    //创建目录
                     File directory = new File(repository.getLocation());
+                    //拿到绝对路径文件
                     directory = directory.getCanonicalFile();
+                    //检验是否是目录和是否可读
                     if (!validateFile(directory, RepositoryType.DIR)) {
                         continue;
                     }
+                    //创建URL
                     URL url = buildClassLoaderUrl(directory);
                     if (log.isDebugEnabled())
                         log.debug("  Including directory " + url);
@@ -198,7 +203,9 @@ public final class ClassLoaderFactory {
                     if (filenames == null) {
                         continue;
                     }
+                    //遍历出以.jar结尾文件
                     for (int j = 0; j < filenames.length; j++) {
+                        //转小写
                         String filename = filenames[j].toLowerCase(Locale.ENGLISH);
                         if (!filename.endsWith(".jar"))
                             continue;
@@ -223,7 +230,7 @@ public final class ClassLoaderFactory {
             for (int i = 0; i < array.length; i++) {
                 log.debug("  location " + i + " is " + array[i]);
             }
-
+        //AccessController.doPrivileged会不受检查，享有特权
         return AccessController.doPrivileged(
                 new PrivilegedAction<URLClassLoader>() {
                     @Override

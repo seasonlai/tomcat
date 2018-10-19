@@ -39,7 +39,7 @@ public class CatalinaProperties {
 
     private static Properties properties = null;
 
-
+    //静态块，加载属性
     static {
         loadProperties();
     }
@@ -63,10 +63,12 @@ public class CatalinaProperties {
         String fileName = "catalina.properties";
 
         try {
+            //获取环境变量catalina.config
             String configUrl = System.getProperty("catalina.config");
             if (configUrl != null) {
                 if (configUrl.indexOf('/') == -1) {
                     // No '/'. Must be a file name rather than a URL
+                    //没有'/'，说明是个文件名
                     fileName = configUrl;
                 } else {
                     is = (new URL(configUrl)).openStream();
@@ -78,6 +80,7 @@ public class CatalinaProperties {
 
         if (is == null) {
             try {
+                //默认读取conf目录中的catalina.properties文件
                 File home = new File(Bootstrap.getCatalinaBase());
                 File conf = new File(home, "conf");
                 File propsFile = new File(conf, fileName);
@@ -86,7 +89,7 @@ public class CatalinaProperties {
                 handleThrowable(t);
             }
         }
-
+        //还是为空就读取源码包中的属性文件
         if (is == null) {
             try {
                 is = CatalinaProperties.class.getResourceAsStream
@@ -99,7 +102,7 @@ public class CatalinaProperties {
         if (is != null) {
             try {
                 properties = new Properties();
-                properties.load(is);
+                properties.load(is);//加载属性
             } catch (Throwable t) {
                 handleThrowable(t);
                 log.warn(t);
@@ -125,6 +128,7 @@ public class CatalinaProperties {
             String name = (String) enumeration.nextElement();
             String value = properties.getProperty(name);
             if (value != null) {
+                //把读取到的属性设置到环境变量中
                 System.setProperty(name, value);
             }
         }

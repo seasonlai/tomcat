@@ -36,16 +36,25 @@ public final class SecurityClassLoad {
         if (requireSecurityManager && System.getSecurityManager() == null) {
             return;
         }
-
+        //加载“org.apache.catalina.core.”包
         loadCorePackage(loader);
+        //加载"org.apache.coyote."包
         loadCoyotePackage(loader);
+        //加载"org.apache.catalina.loader."包
         loadLoaderPackage(loader);
+        //加载"org.apache.catalina.realm."包
         loadRealmPackage(loader);
+        //加载"org.apache.catalina.servlets."包
         loadServletsPackage(loader);
+        //加载"org.apache.catalina.session."包
         loadSessionPackage(loader);
+        //加载"org.apache.catalina.util."包
         loadUtilPackage(loader);
+        //加载"javax.servlet.http.Cookie"
         loadJavaxPackage(loader);
+        //加载"org.apache.catalina.connector."包
         loadConnectorPackage(loader);
+        //加载"org.apache.tomcat."包
         loadTomcatPackage(loader);
     }
 

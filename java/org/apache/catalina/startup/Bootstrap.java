@@ -60,21 +60,26 @@ public final class Bootstrap {
     private static final File catalinaBaseFile;
     private static final File catalinaHomeFile;
 
+    //匹配用双引号""包裹的内容或以逗号"，"开头的？
     private static final Pattern PATH_PATTERN = Pattern.compile("(\".*?\")|(([^,])*)");
 
     static {
         // Will always be non-null
+        //就是源码文件文件根路径
         String userDir = System.getProperty("user.dir");
 
         // Home first
+        //拿到catalina.home路径
         String home = System.getProperty(Globals.CATALINA_HOME_PROP);
         File homeFile = null;
 
         if (home != null) {
             File f = new File(home);
             try {
+                //获得准确的文件路径（路径中./或../这些都会解析）
                 homeFile = f.getCanonicalFile();
             } catch (IOException ioe) {
+                //获得绝对路径
                 homeFile = f.getAbsoluteFile();
             }
         }
@@ -82,9 +87,11 @@ public final class Bootstrap {
         if (homeFile == null) {
             // First fall-back. See if current directory is a bin directory
             // in a normal Tomcat install
+            //尝试是不是在bin路径下
             File bootstrapJar = new File(userDir, "bootstrap.jar");
 
             if (bootstrapJar.exists()) {
+                //返回上一级
                 File f = new File(userDir, "..");
                 try {
                     homeFile = f.getCanonicalFile();
@@ -96,6 +103,7 @@ public final class Bootstrap {
 
         if (homeFile == null) {
             // Second fall-back. Use current directory
+            //再尝试以当前路径作为home路径
             File f = new File(userDir);
             try {
                 homeFile = f.getCanonicalFile();
@@ -105,12 +113,15 @@ public final class Bootstrap {
         }
 
         catalinaHomeFile = homeFile;
+        //设置环境变量catalina.home
         System.setProperty(
                 Globals.CATALINA_HOME_PROP, catalinaHomeFile.getPath());
 
         // Then base
+        //获取catalina.base环境变量
         String base = System.getProperty(Globals.CATALINA_BASE_PROP);
         if (base == null) {
+            //那就赋值为和catalina.home相同的值
             catalinaBaseFile = catalinaHomeFile;
         } else {
             File baseFile = new File(base);
@@ -119,8 +130,10 @@ public final class Bootstrap {
             } catch (IOException ioe) {
                 baseFile = baseFile.getAbsoluteFile();
             }
+            //赋值
             catalinaBaseFile = baseFile;
         }
+        //设置环境变量catalina.base
         System.setProperty(
                 Globals.CATALINA_BASE_PROP, catalinaBaseFile.getPath());
     }
@@ -144,11 +157,16 @@ public final class Bootstrap {
 
     private void initClassLoaders() {
         try {
+            /**
+             *  如：common.loader="${catalina.base}/lib","${catalina.base}/lib/*.jar","${catalina.home}/lib","${catalina.home}/lib/*.jar"
+             */
             commonLoader = createClassLoader("common", null);
             if( commonLoader == null ) {
                 // no config file, default to this loader - we might be in a 'single' env.
+                //没有配置commonLoader就使用当前类加载器
                 commonLoader=this.getClass().getClassLoader();
             }
+            //默认的server.loader、shared.loader没有配置，所以最终引用指向和commonLoader一样
             catalinaLoader = createClassLoader("server", commonLoader);
             sharedLoader = createClassLoader("shared", commonLoader);
         } catch (Throwable t) {
@@ -161,15 +179,15 @@ public final class Bootstrap {
 
     private ClassLoader createClassLoader(String name, ClassLoader parent)
         throws Exception {
-
+        //拿到属性文件catalina.properties中的配置
         String value = CatalinaProperties.getProperty(name + ".loader");
         if ((value == null) || (value.equals("")))
-            return parent;
-
+            return parent;//直接返回parent
+        //处理${}
         value = replace(value);
 
         List<Repository> repositories = new ArrayList<>();
-
+        //拿到所有路径
         String[] repositoryPaths = getPaths(value);
 
         for (String repository : repositoryPaths) {
@@ -177,6 +195,7 @@ public final class Bootstrap {
             try {
                 @SuppressWarnings("unused")
                 URL url = new URL(repository);
+                //添加Repository对象，类型是URL
                 repositories.add(new Repository(repository, RepositoryType.URL));
                 continue;
             } catch (MalformedURLException e) {
@@ -187,14 +206,17 @@ public final class Bootstrap {
             if (repository.endsWith("*.jar")) {
                 repository = repository.substring
                     (0, repository.length() - "*.jar".length());
+                //添加Repository对象，类型是GLOB
                 repositories.add(new Repository(repository, RepositoryType.GLOB));
             } else if (repository.endsWith(".jar")) {
+                //添加Repository对象，类型是JAR
                 repositories.add(new Repository(repository, RepositoryType.JAR));
             } else {
+                //添加Repository对象，类型是DIR
                 repositories.add(new Repository(repository, RepositoryType.DIR));
             }
         }
-
+        //最终返回的是URLClassLoader类型
         return ClassLoaderFactory.createClassLoader(repositories, parent);
     }
 
@@ -220,22 +242,28 @@ public final class Bootstrap {
                     pos_end = pos_start - 1;
                     break;
                 }
+                //拿到${}包裹的内容
                 String propName = str.substring(pos_start + 2, pos_end);
                 String replacement;
                 if (propName.length() == 0) {
                     replacement = null;
                 } else if (Globals.CATALINA_HOME_PROP.equals(propName)) {
+                    //${catalina.home}
                     replacement = getCatalinaHome();
                 } else if (Globals.CATALINA_BASE_PROP.equals(propName)) {
+                    //${catalina.base}
                     replacement = getCatalinaBase();
                 } else {
+                    //其他就到环境变量中拿
                     replacement = System.getProperty(propName);
                 }
                 if (replacement != null) {
                     builder.append(replacement);
                 } else {
+                    //否则不用替换
                     builder.append(str, pos_start, pos_end + 1);
                 }
+                //继续寻找下一个
                 pos_start = str.indexOf("${", pos_end + 1);
             }
             builder.append(str, pos_end + 1, str.length());
@@ -250,16 +278,17 @@ public final class Bootstrap {
      * @throws Exception Fatal initialization error
      */
     public void init() throws Exception {
-
+        //初始化类加载器
         initClassLoaders();
-
+        //设置线程上下文的类加载器
         Thread.currentThread().setContextClassLoader(catalinaLoader);
-
+        //这里就加载了很多类
         SecurityClassLoad.securityClassLoad(catalinaLoader);
 
         // Load our startup class and call its process() method
         if (log.isDebugEnabled())
             log.debug("Loading startup class");
+        //用catalinaLoader加载Catalina类
         Class<?> startupClass = catalinaLoader.loadClass("org.apache.catalina.startup.Catalina");
         Object startupInstance = startupClass.getConstructor().newInstance();
 
@@ -273,8 +302,9 @@ public final class Bootstrap {
         paramValues[0] = sharedLoader;
         Method method =
             startupInstance.getClass().getMethod(methodName, paramTypes);
+        //设置Catalina类的加载器的父加载器为sharedLoader（默认catalinaLoader和sharedLoader是一样的）
         method.invoke(startupInstance, paramValues);
-
+        //守护线程
         catalinaDaemon = startupInstance;
 
     }
@@ -452,7 +482,7 @@ public final class Bootstrap {
      * @param args Command line arguments to be processed
      */
     public static void main(String args[]) {
-
+        //一上来就加锁
         synchronized (daemonLock) {
             if (daemon == null) {
                 // Don't set daemon until init() has completed
@@ -469,6 +499,7 @@ public final class Bootstrap {
                 // When running as a service the call to stop will be on a new
                 // thread so make sure the correct class loader is used to
                 // prevent a range of class not found exceptions.
+                //设置好类加载器
                 Thread.currentThread().setContextClassLoader(daemon.catalinaLoader);
             }
         }

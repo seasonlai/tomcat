@@ -315,12 +315,12 @@ public class JDTCompiler extends org.apache.jasper.compiler.Compiler {
                              CompilerOptions.VERSION_1_8);
             // Version format changed from Java 9 onwards.
             // Support old format that was used in EA implementation as well
-            } else if(opt.equals("9") || opt.equals("1.9")) {
-                settings.put(CompilerOptions.OPTION_Source,
-                             CompilerOptions.VERSION_9);
-            } else if(opt.equals("10")) {
-                settings.put(CompilerOptions.OPTION_Source,
-                             CompilerOptions.VERSION_10);
+//            } else if(opt.equals("9") || opt.equals("1.9")) {
+//                settings.put(CompilerOptions.OPTION_Source,
+//                             CompilerOptions.VERSION_9);
+//            } else if(opt.equals("10")) {
+//                settings.put(CompilerOptions.OPTION_Source,
+//                             CompilerOptions.VERSION_10);
             } else {
                 log.warn("Unknown source VM " + opt + " ignored.");
                 settings.put(CompilerOptions.OPTION_Source,
@@ -369,16 +369,16 @@ public class JDTCompiler extends org.apache.jasper.compiler.Compiler {
                         CompilerOptions.VERSION_1_8);
             // Version format changed from Java 9 onwards.
             // Support old format that was used in EA implementation as well
-            } else if(opt.equals("9") || opt.equals("1.9")) {
-                settings.put(CompilerOptions.OPTION_TargetPlatform,
-                             CompilerOptions.VERSION_9);
-                settings.put(CompilerOptions.OPTION_Compliance,
-                        CompilerOptions.VERSION_9);
-            } else if(opt.equals("10")) {
-                settings.put(CompilerOptions.OPTION_TargetPlatform,
-                        CompilerOptions.VERSION_10);
-                settings.put(CompilerOptions.OPTION_Compliance,
-                        CompilerOptions.VERSION_10);
+//            } else if(opt.equals("9") || opt.equals("1.9")) {
+//                settings.put(CompilerOptions.OPTION_TargetPlatform,
+//                             CompilerOptions.VERSION_9);
+//                settings.put(CompilerOptions.OPTION_Compliance,
+//                        CompilerOptions.VERSION_9);
+//            } else if(opt.equals("10")) {
+//                settings.put(CompilerOptions.OPTION_TargetPlatform,
+//                        CompilerOptions.VERSION_10);
+//                settings.put(CompilerOptions.OPTION_Compliance,
+//                        CompilerOptions.VERSION_10);
             } else {
                 log.warn("Unknown target VM " + opt + " ignored.");
                 settings.put(CompilerOptions.OPTION_TargetPlatform,

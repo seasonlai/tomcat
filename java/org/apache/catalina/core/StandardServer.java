@@ -817,10 +817,12 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         onameMBeanFactory = register(factory, "type=MBeanFactory");
 
         // Register the naming resources
+        //JNDI初始化
         globalNamingResources.init();
 
         // Populate the extension validator with JARs from common and shared
         // class loaders
+        //JAR包验证
         if (getCatalina() != null) {
             ClassLoader cl = getCatalina().getParentClassLoader();
             // Walk the class loader hierarchy. Stop at the system class loader.
@@ -848,6 +850,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
             }
         }
         // Initialize our defined Services
+        //调用service的初始化方法
         for (int i = 0; i < services.length; i++) {
             services[i].init();
         }

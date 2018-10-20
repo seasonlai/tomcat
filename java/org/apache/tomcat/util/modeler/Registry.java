@@ -145,6 +145,7 @@ public class Registry implements RegistryMBean, MBeanRegistration {
             if (key == null)
                 key = Thread.currentThread().getContextClassLoader();
             if (key != null) {
+                //从缓存中取
                 localRegistry = perLoaderRegistries.get(key);
                 if (localRegistry == null) {
                     localRegistry = new Registry();
@@ -441,6 +442,7 @@ public class Registry implements RegistryMBean, MBeanRegistration {
                 if (server == null) {
                     long t1 = System.currentTimeMillis();
                     if (MBeanServerFactory.findMBeanServer(null).size() > 0) {
+                        //从缓存中找
                         server = MBeanServerFactory.findMBeanServer(null).get(0);
                         if (log.isDebugEnabled()) {
                             log.debug("Using existing MBeanServer " + (System.currentTimeMillis() - t1));

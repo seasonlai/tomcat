@@ -92,7 +92,8 @@ public class ContextRuleSet implements RuleSet {
      */
     @Override
     public void addRuleInstances(Digester digester) {
-
+        //如果通过server.xml配置context则create为true
+        //如果通过HostConfig自动创建Context，则create为false
         if (create) {
             digester.addObjectCreate(prefix + "Context",
                     "org.apache.catalina.core.StandardContext", "className");
@@ -102,6 +103,7 @@ public class ContextRuleSet implements RuleSet {
         }
 
         if (create) {
+            //添加ContextConfig，用于详细配置Context，如解析web.xml等
             digester.addRule(prefix + "Context",
                              new LifecycleListenerRule
                                  ("org.apache.catalina.startup.ContextConfig",
@@ -110,7 +112,7 @@ public class ContextRuleSet implements RuleSet {
                                 "addChild",
                                 "org.apache.catalina.Container");
         }
-
+        //添加生命周期管理
         digester.addObjectCreate(prefix + "Context/Listener",
                                  null, // MUST be specified in the element
                                  "className");
@@ -118,7 +120,7 @@ public class ContextRuleSet implements RuleSet {
         digester.addSetNext(prefix + "Context/Listener",
                             "addLifecycleListener",
                             "org.apache.catalina.LifecycleListener");
-
+        //添加类加载器
         digester.addObjectCreate(prefix + "Context/Loader",
                             "org.apache.catalina.loader.WebappLoader",
                             "className");
@@ -126,7 +128,7 @@ public class ContextRuleSet implements RuleSet {
         digester.addSetNext(prefix + "Context/Loader",
                             "setLoader",
                             "org.apache.catalina.Loader");
-
+        //添加会话管理
         digester.addObjectCreate(prefix + "Context/Manager",
                                  "org.apache.catalina.session.StandardManager",
                                  "className");
@@ -150,14 +152,14 @@ public class ContextRuleSet implements RuleSet {
         digester.addSetNext(prefix + "Context/Manager/SessionIdGenerator",
                             "setSessionIdGenerator",
                             "org.apache.catalina.SessionIdGenerator");
-
+        //添加初始化参数
         digester.addObjectCreate(prefix + "Context/Parameter",
                                  "org.apache.tomcat.util.descriptor.web.ApplicationParameter");
         digester.addSetProperties(prefix + "Context/Parameter");
         digester.addSetNext(prefix + "Context/Parameter",
                             "addApplicationParameter",
                             "org.apache.tomcat.util.descriptor.web.ApplicationParameter");
-
+        //添加安全配置和web资源配置
         digester.addRuleSet(new RealmRuleSet(prefix + "Context/"));
 
         digester.addObjectCreate(prefix + "Context/Resources",
@@ -192,14 +194,14 @@ public class ContextRuleSet implements RuleSet {
                             "addPostResources",
                             "org.apache.catalina.WebResourceSet");
 
-
+        //添加资源链接
         digester.addObjectCreate(prefix + "Context/ResourceLink",
                 "org.apache.tomcat.util.descriptor.web.ContextResourceLink");
         digester.addSetProperties(prefix + "Context/ResourceLink");
         digester.addRule(prefix + "Context/ResourceLink",
                 new SetNextNamingRule("addResourceLink",
                         "org.apache.tomcat.util.descriptor.web.ContextResourceLink"));
-
+        //添加valve
         digester.addObjectCreate(prefix + "Context/Valve",
                                  null, // MUST be specified in the element
                                  "className");
@@ -207,16 +209,17 @@ public class ContextRuleSet implements RuleSet {
         digester.addSetNext(prefix + "Context/Valve",
                             "addValve",
                             "org.apache.catalina.Valve");
-
+        //添加守护资源配置
+        //WatchedResource用于监听资源
         digester.addCallMethod(prefix + "Context/WatchedResource",
                                "addWatchedResource", 0);
-
+        //用于添加一个生命周期监听类，添加到Context包含的wrapper上
         digester.addCallMethod(prefix + "Context/WrapperLifecycle",
                                "addWrapperLifecycle", 0);
 
         digester.addCallMethod(prefix + "Context/WrapperListener",
                                "addWrapperListener", 0);
-
+        //jar包扫描
         digester.addObjectCreate(prefix + "Context/JarScanner",
                                  "org.apache.tomcat.util.scan.StandardJarScanner",
                                  "className");
@@ -224,7 +227,7 @@ public class ContextRuleSet implements RuleSet {
         digester.addSetNext(prefix + "Context/JarScanner",
                             "setJarScanner",
                             "org.apache.tomcat.JarScanner");
-
+        //jar包过滤
         digester.addObjectCreate(prefix + "Context/JarScanner/JarScanFilter",
                                  "org.apache.tomcat.util.scan.StandardJarScanFilter",
                                  "className");
@@ -232,7 +235,7 @@ public class ContextRuleSet implements RuleSet {
         digester.addSetNext(prefix + "Context/JarScanner/JarScanFilter",
                             "setJarScanFilter",
                             "org.apache.tomcat.JarScanFilter");
-
+        //cookie处理器
         digester.addObjectCreate(prefix + "Context/CookieProcessor",
                                  "org.apache.tomcat.util.http.Rfc6265CookieProcessor",
                                  "className");

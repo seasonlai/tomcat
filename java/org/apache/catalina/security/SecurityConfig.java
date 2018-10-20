@@ -67,6 +67,11 @@ public final class SecurityConfig{
         String definition = null;
         String access = null;
         try{
+            /**
+             * 默认
+             * package.definition=sun.,java.,org.apache.catalina.,org.apache.coyote.,org.apache.jasper.,org.apache.naming.,org.apache.tomcat.
+             * package.access=sun.,org.apache.catalina.,org.apache.coyote.,org.apache.jasper.,org.apache.tomcat.
+             */
             definition = CatalinaProperties.getProperty("package.definition");
             access = CatalinaProperties.getProperty("package.access");
         } catch (java.lang.Exception ex){
@@ -85,6 +90,7 @@ public final class SecurityConfig{
      * @return an instance of that class.
      */
     public static SecurityConfig newInstance(){
+        //用了double check模式
         if (singleton == null) {
             synchronized (singletonLock) {
                 if (singleton == null) {
@@ -102,6 +108,7 @@ public final class SecurityConfig{
     public void setPackageAccess(){
         // If catalina.properties is missing, protect all by default.
         if (packageAccess == null){
+            //为空就设置默认的
             setSecurityProperty("package.access", PACKAGE_ACCESS);
         } else {
             setSecurityProperty("package.access", packageAccess);
@@ -115,6 +122,7 @@ public final class SecurityConfig{
      public void setPackageDefinition(){
         // If catalina.properties is missing, protect all by default.
          if (packageDefinition == null){
+             //packageDefinition为空就设置默认的
             setSecurityProperty("package.definition", PACKAGE_DEFINITION);
          } else {
             setSecurityProperty("package.definition", packageDefinition);

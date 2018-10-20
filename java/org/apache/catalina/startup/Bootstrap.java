@@ -159,6 +159,7 @@ public final class Bootstrap {
         try {
             /**
              *  如：common.loader="${catalina.base}/lib","${catalina.base}/lib/*.jar","${catalina.home}/lib","${catalina.home}/lib/*.jar"
+             *  最后返回的是URLClassLoader类型
              */
             commonLoader = createClassLoader("common", null);
             if( commonLoader == null ) {

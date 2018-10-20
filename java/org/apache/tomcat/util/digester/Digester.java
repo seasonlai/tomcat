@@ -90,6 +90,7 @@ public class Digester extends DefaultHandler2 {
         String className = System.getProperty("org.apache.tomcat.util.digester.PROPERTY_SOURCE");
         IntrospectionUtils.PropertySource source = null;
         if (className != null) {
+            //尝试加载类
             ClassLoader[] cls = new ClassLoader[] { Digester.class.getClassLoader(),
                     Thread.currentThread().getContextClassLoader() };
             for (int i = 0; i < cls.length; i++) {
@@ -129,6 +130,7 @@ public class Digester extends DefaultHandler2 {
         public String getProperty(String key) {
             ClassLoader cl = getClassLoader();
             if (cl instanceof PermissionCheck) {
+                //PermissionCheck是tomcat自己搞的接口，需要通过检验
                 Permission p = new PropertyPermission(key, "read");
                 if (!((PermissionCheck) cl).check(p)) {
                     return null;
@@ -318,6 +320,7 @@ public class Digester extends DefaultHandler2 {
 
 
     public Digester() {
+        //默认构造方法会把propertySourceSet赋值为true
         propertySourceSet = true;
         if (propertySource != null) {
             source = new IntrospectionUtils.PropertySource[] { propertySource, source[0] };

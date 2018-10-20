@@ -73,17 +73,20 @@ public class HostRuleSet implements RuleSet {
      */
     @Override
     public void addRuleInstances(Digester digester) {
-
+        //默认创建StandardHost实例
         digester.addObjectCreate(prefix + "Host",
                                  "org.apache.catalina.core.StandardHost",
                                  "className");
         digester.addSetProperties(prefix + "Host");
+        //
         digester.addRule(prefix + "Host",
                          new CopyParentClassLoaderRule());
+        //添加HostConfig监听器
         digester.addRule(prefix + "Host",
                          new LifecycleListenerRule
                          ("org.apache.catalina.startup.HostConfig",
                           "hostConfigClass"));
+        //添加到Engine
         digester.addSetNext(prefix + "Host",
                             "addChild",
                             "org.apache.catalina.Container");
@@ -92,6 +95,7 @@ public class HostRuleSet implements RuleSet {
                                "addAlias", 0);
 
         //Cluster configuration start
+        //添加集群
         digester.addObjectCreate(prefix + "Host/Cluster",
                                  null, // MUST be specified in the element
                                  "className");
@@ -100,7 +104,7 @@ public class HostRuleSet implements RuleSet {
                             "setCluster",
                             "org.apache.catalina.Cluster");
         //Cluster configuration end
-
+        //添加生命周期监听器
         digester.addObjectCreate(prefix + "Host/Listener",
                                  null, // MUST be specified in the element
                                  "className");
@@ -108,7 +112,7 @@ public class HostRuleSet implements RuleSet {
         digester.addSetNext(prefix + "Host/Listener",
                             "addLifecycleListener",
                             "org.apache.catalina.LifecycleListener");
-
+        //添加安全胚子
         digester.addRuleSet(new RealmRuleSet(prefix + "Host/"));
 
         digester.addObjectCreate(prefix + "Host/Valve",

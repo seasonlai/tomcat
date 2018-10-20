@@ -57,7 +57,8 @@ public abstract class LifecycleMBeanBase extends LifecycleBase
         // preRegister().
         if (oname == null) {
             mserver = Registry.getRegistry(null, null).getMBeanServer();
-
+            //getObjectNameKeyProperties（）：StandardServer返回type=Server，
+            //把当前作为组件注册到Registry
             oname = register(this, getObjectNameKeyProperties());
         }
     }
@@ -149,6 +150,7 @@ public abstract class LifecycleMBeanBase extends LifecycleBase
             String objectNameKeyProperties) {
 
         // Construct an object name with the right domain
+        //默认domain为Catalina
         StringBuilder name = new StringBuilder(getDomain());
         name.append(':');
         name.append(objectNameKeyProperties);
@@ -157,7 +159,6 @@ public abstract class LifecycleMBeanBase extends LifecycleBase
 
         try {
             on = new ObjectName(name.toString());
-
             Registry.getRegistry(null, null).registerComponent(obj, on, null);
         } catch (MalformedObjectNameException e) {
             log.warn(sm.getString("lifecycleMBeanBase.registerFail", obj, name),

@@ -127,13 +127,16 @@ public abstract class LifecycleBase implements Lifecycle {
 
     @Override
     public final synchronized void init() throws LifecycleException {
+        //不是new状态就抛异常
         if (!state.equals(LifecycleState.NEW)) {
             invalidTransition(Lifecycle.BEFORE_INIT_EVENT);
         }
 
         try {
+            //改变状态为INITIALIZING，并通知各个监听器事件
             setStateInternal(LifecycleState.INITIALIZING, null, false);
             initInternal();
+            //改变状态为INITIALIZED，并通知各个监听器事件
             setStateInternal(LifecycleState.INITIALIZED, null, false);
         } catch (Throwable t) {
             handleSubClassException(t, "lifecycleBase.initFail", toString());

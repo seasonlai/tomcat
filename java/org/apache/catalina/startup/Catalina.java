@@ -93,6 +93,7 @@ public class Catalina {
     // XXX Should be moved to embedded
     /**
      * The shared extensions class loader for this server.
+     * 是catalinaLoader，默认和commonLoader、sharedLoader是同一个
      */
     protected ClassLoader parentClassLoader =
         Catalina.class.getClassLoader();
@@ -132,6 +133,7 @@ public class Catalina {
 
     public Catalina() {
         setSecurityProtection();
+        //加载ExceptionUtils类
         ExceptionUtils.preload();
     }
 
@@ -160,7 +162,7 @@ public class Catalina {
 
     /**
      * Set the shared extensions class loader.
-     *
+     * 外面通过反射调用了该方法，参数是shareloader
      * @param parentClassLoader The shared extensions class loader.
      */
     public void setParentClassLoader(ClassLoader parentClassLoader) {
@@ -283,25 +285,29 @@ public class Catalina {
         List<String> attrs = new ArrayList<>();
         attrs.add("className");
         fakeAttributes.put(Object.class, attrs);
+        //现在是Object.class -> {className}
         digester.setFakeAttributes(fakeAttributes);
+        //使用线程上下文的类加载器
         digester.setUseContextClassLoader(true);
 
         // Configure the actions we will be using
+        //默认Server类型为StandardServer
         digester.addObjectCreate("Server",
                                  "org.apache.catalina.core.StandardServer",
                                  "className");
         digester.addSetProperties("Server");
+        //设置Server的相关属性后，将调用setServer方法设置到Catalina中
         digester.addSetNext("Server",
                             "setServer",
                             "org.apache.catalina.Server");
-
+        //配置JNDI
         digester.addObjectCreate("Server/GlobalNamingResources",
                                  "org.apache.catalina.deploy.NamingResourcesImpl");
         digester.addSetProperties("Server/GlobalNamingResources");
         digester.addSetNext("Server/GlobalNamingResources",
                             "setGlobalNamingResources",
                             "org.apache.catalina.deploy.NamingResourcesImpl");
-
+        //生命周期监听器
         digester.addObjectCreate("Server/Listener",
                                  null, // MUST be specified in the element
                                  "className");
@@ -309,7 +315,7 @@ public class Catalina {
         digester.addSetNext("Server/Listener",
                             "addLifecycleListener",
                             "org.apache.catalina.LifecycleListener");
-
+        //构造Service实例
         digester.addObjectCreate("Server/Service",
                                  "org.apache.catalina.core.StandardService",
                                  "className");
@@ -317,7 +323,7 @@ public class Catalina {
         digester.addSetNext("Server/Service",
                             "addService",
                             "org.apache.catalina.Service");
-
+        //为Service添加生命周期监听
         digester.addObjectCreate("Server/Service/Listener",
                                  null, // MUST be specified in the element
                                  "className");
@@ -326,7 +332,7 @@ public class Catalina {
                             "addLifecycleListener",
                             "org.apache.catalina.LifecycleListener");
 
-        //Executor
+        //为service添加Executor
         digester.addObjectCreate("Server/Service/Executor",
                          "org.apache.catalina.core.StandardThreadExecutor",
                          "className");
@@ -335,16 +341,16 @@ public class Catalina {
         digester.addSetNext("Server/Service/Executor",
                             "addExecutor",
                             "org.apache.catalina.Executor");
-
-
+        //为service添加Connector
         digester.addRule("Server/Service/Connector",
                          new ConnectorCreateRule());
+        //排除executor、sslImplementationName、protocol属性
         digester.addRule("Server/Service/Connector", new SetAllPropertiesRule(
                 new String[]{"executor", "sslImplementationName", "protocol"}));
         digester.addSetNext("Server/Service/Connector",
                             "addConnector",
                             "org.apache.catalina.connector.Connector");
-
+        //为Connector添加虚拟主机SSL配置
         digester.addObjectCreate("Server/Service/Connector/SSLHostConfig",
                                  "org.apache.tomcat.util.net.SSLHostConfig");
         digester.addSetProperties("Server/Service/Connector/SSLHostConfig");
@@ -373,7 +379,7 @@ public class Catalina {
         digester.addSetNext("Server/Service/Connector/SSLHostConfig/OpenSSLConf/OpenSSLConfCmd",
                             "addCmd",
                             "org.apache.tomcat.util.net.openssl.OpenSSLConfCmd");
-
+        //为Connector添加生命周期监听
         digester.addObjectCreate("Server/Service/Connector/Listener",
                                  null, // MUST be specified in the element
                                  "className");
@@ -381,7 +387,7 @@ public class Catalina {
         digester.addSetNext("Server/Service/Connector/Listener",
                             "addLifecycleListener",
                             "org.apache.catalina.LifecycleListener");
-
+        //为Connector添加升级协议，用于支持HTTP/2
         digester.addObjectCreate("Server/Service/Connector/UpgradeProtocol",
                                   null, // MUST be specified in the element
                                   "className");
@@ -391,6 +397,7 @@ public class Catalina {
                             "org.apache.coyote.UpgradeProtocol");
 
         // Add RuleSets for nested elements
+        //添加子元素
         digester.addRuleSet(new NamingRuleSet("Server/GlobalNamingResources/"));
         digester.addRuleSet(new EngineRuleSet("Server/Service/"));
         digester.addRuleSet(new HostRuleSet("Server/Service/Engine/"));
@@ -402,7 +409,7 @@ public class Catalina {
         digester.addRule("Server/Service/Engine",
                          new SetParentClassLoaderRule(parentClassLoader));
         addClusterRuleSet(digester, "Server/Service/Engine/Cluster/");
-
+        //封装成各种RuleSet来完成不同的解析
         long t2=System.currentTimeMillis();
         if (log.isDebugEnabled()) {
             log.debug("Digester for server.xml created " + ( t2-t1 ));
@@ -530,13 +537,14 @@ public class Catalina {
         loaded = true;
 
         long t1 = System.nanoTime();
-
+        //拿到java.io.tmpdir临时路径
         initDirs();
 
         // Before digester - it may be needed
         initNaming();
 
         // Create and execute our Digester
+        //里面弄了一堆解析规则
         Digester digester = createStartDigester();
 
         InputSource inputSource = null;
@@ -544,7 +552,7 @@ public class Catalina {
         File file = null;
         try {
             try {
-                file = configFile();
+                file = configFile();//拿到server.xml文件
                 inputStream = new FileInputStream(file);
                 inputSource = new InputSource(file.toURI().toURL().toString());
             } catch (Exception e) {
@@ -570,6 +578,7 @@ public class Catalina {
             // This should be included in catalina.jar
             // Alternative: don't bother with xml, just create it manually.
             if (inputStream == null) {
+                //到这里是嵌入tomcat？
                 try {
                     inputStream = getClass().getClassLoader()
                             .getResourceAsStream("server-embed.xml");
@@ -601,7 +610,9 @@ public class Catalina {
 
             try {
                 inputSource.setByteStream(inputStream);
+                //加入当前类作为根，就是栈底吧
                 digester.push(this);
+                //开始解析
                 digester.parse(inputSource);
             } catch (SAXParseException spe) {
                 log.warn("Catalina.start using " + getConfigFile() + ": " +
@@ -620,12 +631,13 @@ public class Catalina {
                 }
             }
         }
-
+        //对server进行一些设置
         getServer().setCatalina(this);
         getServer().setCatalinaHome(Bootstrap.getCatalinaHomeFile());
         getServer().setCatalinaBase(Bootstrap.getCatalinaBaseFile());
 
         // Stream redirection
+        //控制台输出
         initStreams();
 
         // Start the new server
@@ -812,12 +824,14 @@ public class Catalina {
             String oldValue =
                 System.getProperty(javax.naming.Context.URL_PKG_PREFIXES);
             if (oldValue != null) {
+                //所以变成org.apache.naming:java.naming.factory.url.pkgs?
                 value = value + ":" + oldValue;
             }
             System.setProperty(javax.naming.Context.URL_PKG_PREFIXES, value);
             if( log.isDebugEnabled() ) {
                 log.debug("Setting naming prefix=" + value);
             }
+            //java.naming.factory.initial
             value = System.getProperty
                 (javax.naming.Context.INITIAL_CONTEXT_FACTORY);
             if (value == null) {

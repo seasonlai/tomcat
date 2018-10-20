@@ -108,6 +108,7 @@
 # -----------------------------------------------------------------------------
 
 # OS specific support.  $var _must_ be set to either true or false.
+# 系统的个别支持表示
 cygwin=false
 darwin=false
 os400=false
@@ -121,10 +122,13 @@ esac
 
 # resolve links - $0 may be a softlink
 PRG="$0"
-
+# -h 当file存在并且是符号链接文件时返回真，该选项在一些老系统上无效
 while [ -h "$PRG" ]; do
+  # ls -ld 列出目录 如：ls -ld ./test 输出 ./test
   ls=`ls -ld "$PRG"`
-  link=`expr "$ls" : '.*-> \(.*\)$'`
+  # expr 可用于模式匹配截取字符串
+  link=`F "$ls" : '.*-> \(.*\)$'`
+  # /dev/null ：表示空设备，这里就是把日志记录到空设备里，就是不记录日志，专门用来处理需要被丢弃的信息。
   if expr "$link" : '/.*' > /dev/null; then
     PRG="$link"
   else
@@ -133,9 +137,11 @@ while [ -h "$PRG" ]; do
 done
 
 # Get standard environment variables
+# dirname 获取目录名称
 PRGDIR=`dirname "$PRG"`
 
 # Only set CATALINA_HOME if not already set
+# -z 表示空串 (如果字符串长度为0)
 [ -z "$CATALINA_HOME" ] && CATALINA_HOME=`cd "$PRGDIR/.." >/dev/null; pwd`
 
 # Copy CATALINA_BASE from CATALINA_HOME if not already set
@@ -144,14 +150,15 @@ PRGDIR=`dirname "$PRG"`
 # Ensure that any user defined CLASSPATH variables are not used on startup,
 # but allow them to be specified in setenv.sh, in rare case when it is needed.
 CLASSPATH=
-
+# -r 当指定的文件或目录存在并且可读时返回为真
 if [ -r "$CATALINA_BASE/bin/setenv.sh" ]; then
   . "$CATALINA_BASE/bin/setenv.sh"
 elif [ -r "$CATALINA_HOME/bin/setenv.sh" ]; then
   . "$CATALINA_HOME/bin/setenv.sh"
-fi
+fi # 可以看到CATALINA_BASE下的setenv.sh优先于CATALINA_HOME的
 
 # For Cygwin, ensure paths are in UNIX format before anything is touched
+# -n 非空串 (如果字符串长度不为0)
 if $cygwin; then
   [ -n "$JAVA_HOME" ] && JAVA_HOME=`cygpath --unix "$JAVA_HOME"`
   [ -n "$JRE_HOME" ] && JRE_HOME=`cygpath --unix "$JRE_HOME"`
@@ -163,6 +170,7 @@ fi
 # Ensure that neither CATALINA_HOME nor CATALINA_BASE contains a colon
 # as this is used as the separator in the classpath and Java provides no
 # mechanism for escaping if the same character appears in the path.
+# 不允许CATALINA_HOME、CATALINA_BASE中有冒号
 case $CATALINA_HOME in
   *:*) echo "Using CATALINA_HOME:   $CATALINA_HOME";
        echo "Unable to start as CATALINA_HOME contains a colon (:) character";
@@ -270,7 +278,7 @@ fi
 if [ -z "$UMASK" ]; then
     UMASK="0027"
 fi
-umask $UMASK
+umask $UMASK #umask用于修改文件权限
 
 # Java 9 no longer supports the java.endorsed.dirs
 # system property. Only try to use it if

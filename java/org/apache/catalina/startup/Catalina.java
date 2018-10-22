@@ -307,7 +307,7 @@ public class Catalina {
         digester.addSetNext("Server/GlobalNamingResources",
                             "setGlobalNamingResources",
                             "org.apache.catalina.deploy.NamingResourcesImpl");
-        //生命周期监听器
+        //生命周期监听器到Server
         digester.addObjectCreate("Server/Listener",
                                  null, // MUST be specified in the element
                                  "className");

@@ -910,6 +910,7 @@ public class Connector extends LifecycleMBeanBase  {
 
         // Make sure parseBodyMethodsSet has a default
         if (null == parseBodyMethodsSet) {
+            //反射设值
             setParseBodyMethods(getParseBodyMethods());
         }
 

@@ -231,6 +231,7 @@ public class JreMemoryLeakPreventionListener implements LifecycleListener {
             {
                 // Use the system classloader as the victim for all this
                 // ClassLoader pinning we're about to do.
+                //切换成系统类加载器
                 Thread.currentThread().setContextClassLoader(
                         ClassLoader.getSystemClassLoader());
 
@@ -419,6 +420,7 @@ public class JreMemoryLeakPreventionListener implements LifecycleListener {
                 }
 
             } finally {
+                //最后设置回原来的类加载器
                 Thread.currentThread().setContextClassLoader(loader);
             }
         }

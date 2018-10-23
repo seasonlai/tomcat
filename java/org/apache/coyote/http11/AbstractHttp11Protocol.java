@@ -55,7 +55,9 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
 
     public AbstractHttp11Protocol(AbstractEndpoint<S,?> endpoint) {
         super(endpoint);
+        //默认60000
         setConnectionTimeout(Constants.DEFAULT_CONNECTION_TIMEOUT);
+        //ConnectionHandler
         ConnectionHandler<S> cHandler = new ConnectionHandler<>(this);
         setHandler(cHandler);
         getEndpoint().setHandler(cHandler);

@@ -63,10 +63,12 @@ public class ConnectorCreateRule extends Rule {
         }
         Connector con = new Connector(attributes.getValue("protocol"));
         if (ex != null) {
+            //反射设值
             setExecutor(con, ex);
         }
         String sslImplementationName = attributes.getValue("sslImplementationName");
         if (sslImplementationName != null) {
+            //反射设值
             setSSLImplementationName(con, sslImplementationName);
         }
         digester.push(con);

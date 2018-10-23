@@ -76,9 +76,10 @@ public class Connector extends LifecycleMBeanBase  {
 
 
     public Connector(String protocol) {
+        //是否安装了APR
         boolean aprConnector = AprLifecycleListener.isAprAvailable() &&
                 AprLifecycleListener.getUseAprConnector();
-
+        //所以默认是用HTTP/1.1
         if ("HTTP/1.1".equals(protocol) || protocol == null) {
             if (aprConnector) {
                 protocolHandlerClassName = "org.apache.coyote.http11.Http11AprProtocol";
@@ -98,6 +99,7 @@ public class Connector extends LifecycleMBeanBase  {
         // Instantiate protocol handler
         ProtocolHandler p = null;
         try {
+            //反射实例化
             Class<?> clazz = Class.forName(protocolHandlerClassName);
             p = (ProtocolHandler) clazz.getConstructor().newInstance();
         } catch (Exception e) {
@@ -108,6 +110,7 @@ public class Connector extends LifecycleMBeanBase  {
         }
 
         // Default for Connector depends on this system property
+        //设置在出异常时是否重抛的标志
         setThrowOnFailure(Boolean.getBoolean("org.apache.catalina.startup.EXIT_ON_INIT_FAILURE"));
     }
 
@@ -920,6 +923,7 @@ public class Connector extends LifecycleMBeanBase  {
         }
         if (AprLifecycleListener.isAprAvailable() && AprLifecycleListener.getUseOpenSSL() &&
                 protocolHandler instanceof AbstractHttp11JsseProtocol) {
+            //如果用APR的并且要用SSL并且protocolHandler是AbstractHttp11JsseProtocol类型
             AbstractHttp11JsseProtocol<?> jsseProtocolHandler =
                     (AbstractHttp11JsseProtocol<?>) protocolHandler;
             if (jsseProtocolHandler.isSSLEnabled() &&

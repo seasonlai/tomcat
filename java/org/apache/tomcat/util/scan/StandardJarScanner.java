@@ -174,6 +174,7 @@ public class StandardJarScanner implements JarScanner {
         Set<URL> processedURLs = new HashSet<>();
 
         // Scan WEB-INF/lib
+        //扫描/WEB-INF/lib/
         Set<String> dirList = context.getResourcePaths(Constants.WEB_INF_LIB);
         if (dirList != null) {
             for (String path : dirList) {

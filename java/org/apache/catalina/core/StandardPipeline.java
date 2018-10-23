@@ -172,13 +172,13 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
         // Start the Valves in our pipeline (including the basic), if any
         Valve current = first;
         if (current == null) {
-            current = basic;
+            current = basic;//从basic开始
         }
         while (current != null) {
             if (current instanceof Lifecycle)
                 ((Lifecycle) current).start();
             current = current.getNext();
-        }
+        }//链式调用start
 
         setState(LifecycleState.STARTING);
     }

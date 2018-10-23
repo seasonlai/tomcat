@@ -292,6 +292,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
      * Handles the special values.
      */
     private int getStartStopThreadsInternal() {
+        //默认为1
         int result = getStartStopThreads();
 
         // Positive values are unchanged
@@ -302,9 +303,10 @@ public abstract class ContainerBase extends LifecycleMBeanBase
         // Zero == Runtime.getRuntime().availableProcessors()
         // -ve  == Runtime.getRuntime().availableProcessors() + value
         // These two are the same
+        //处理器数+result
         result = Runtime.getRuntime().availableProcessors() + result;
         if (result < 1) {
-            result = 1;
+            result = 1;//至少为1
         }
         return result;
     }
@@ -940,7 +942,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
         }
 
         // Start our child containers, if any
-        //启动子节点（<context>）
+        //启动子节点
         Container children[] = findChildren();
         List<Future<Void>> results = new ArrayList<>();
         for (int i = 0; i < children.length; i++) {
@@ -961,18 +963,19 @@ public abstract class ContainerBase extends LifecycleMBeanBase
             }
 
         }
+        //上面启动所有context
         if (multiThrowable != null) {
             throw new LifecycleException(sm.getString("containerBase.threadedStartFailed"),
                     multiThrowable.getThrowable());
         }
 
         // Start the Valves in our pipeline (including the basic), if any
-        //启动Host持有的Pipeline组件
+        //启动Pipeline组件
         if (pipeline instanceof Lifecycle) {
             ((Lifecycle) pipeline).start();
         }
 
-        //HostConfig会监听该事件
+        //触发监听事件
         setState(LifecycleState.STARTING);
 
         // Start our thread
@@ -1382,7 +1385,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
                 t = e;
                 throw e;
             } finally {
-                if (!threadDone) {
+                if (!threadDone) {//有异常
                     log.error(unexpectedDeathMessage, t);
                 }
             }
@@ -1401,8 +1404,10 @@ public abstract class ContainerBase extends LifecycleMBeanBase
 
                     // Ensure background processing for Contexts and Wrappers
                     // is performed under the web app's class loader
+                    //改变线程上下文的类加载器为web应用的类加载器
                     originalClassLoader = ((Context) container).bind(false, null);
                 }
+                //容器的后台处理
                 container.backgroundProcess();
                 Container[] children = container.findChildren();
                 for (int i = 0; i < children.length; i++) {

@@ -99,7 +99,9 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
 
     public AbstractProtocol(AbstractEndpoint<S,?> endpoint) {
         this.endpoint = endpoint;
+        //-1是无限重连吗
         setConnectionLinger(Constants.DEFAULT_CONNECTION_LINGER);
+        //TCP默认设置无延时
         setTcpNoDelay(Constants.DEFAULT_TCP_NO_DELAY);
     }
 

@@ -89,6 +89,7 @@ public class WebappServiceLoader<T> {
      * @throws IOException if there was a problem loading any service
      */
     public List<T> load(Class<T> serviceType) throws IOException {
+        //META-INF/services/+xxx
         String configFile = SERVICES + serviceType.getName();
 
         LinkedHashSet<String> applicationServicesFound = new LinkedHashSet<>();
@@ -104,6 +105,7 @@ public class WebappServiceLoader<T> {
         if (orderedLibs != null) {
             // handle ordered libs directly, ...
             for (String lib : orderedLibs) {
+                ///WEB-INF/lib/+xxx
                 URL jarUrl = servletContext.getResource(LIB + lib);
                 if (jarUrl == null) {
                     // should not happen, just ignore
@@ -139,6 +141,7 @@ public class WebappServiceLoader<T> {
         }
 
         // Filter the discovered container SCIs if required
+        //过滤
         if (containerSciFilterPattern != null) {
             Iterator<String> iter = containerServicesFound.iterator();
             while (iter.hasNext()) {
@@ -166,6 +169,7 @@ public class WebappServiceLoader<T> {
             BufferedReader reader = new BufferedReader(in)) {
             String line;
             while ((line = reader.readLine()) != null) {
+                //以#作为分隔符吗
                 int i = line.indexOf('#');
                 if (i >= 0) {
                     line = line.substring(0, i);
@@ -186,6 +190,7 @@ public class WebappServiceLoader<T> {
         for (String serviceClass : servicesFound) {
             try {
                 Class<?> clazz = Class.forName(serviceClass, true, loader);
+                //反射实例化再强转
                 services.add(serviceType.cast(clazz.getConstructor().newInstance()));
             } catch (ReflectiveOperationException | ClassCastException e) {
                 throw new IOException(e);

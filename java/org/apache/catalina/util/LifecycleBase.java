@@ -173,16 +173,17 @@ public abstract class LifecycleBase implements Lifecycle {
         }
 
         if (state.equals(LifecycleState.NEW)) {
-            init();
+            init();//初始化（按道理已经初始化了啊o(￣▽￣)ｄ）
         } else if (state.equals(LifecycleState.FAILED)) {
-            stop();
+            stop();//发生了错误
         } else if (!state.equals(LifecycleState.INITIALIZED) &&
                 !state.equals(LifecycleState.STOPPED)) {
-            //不符合启动逻辑
+            //不符合启动逻辑，抛异常
             invalidTransition(Lifecycle.BEFORE_START_EVENT);
         }
 
         try {
+            //设置事件
             setStateInternal(LifecycleState.STARTING_PREP, null, false);
             startInternal();
             if (state.equals(LifecycleState.FAILED)) {
@@ -194,6 +195,7 @@ public abstract class LifecycleBase implements Lifecycle {
                 // doing what they are supposed to.
                 invalidTransition(Lifecycle.AFTER_START_EVENT);
             } else {
+                //开始成功，设置生命周期事件为STARTED
                 setStateInternal(LifecycleState.STARTED, null, false);
             }
         } catch (Throwable t) {
@@ -410,6 +412,7 @@ public abstract class LifecycleBase implements Lifecycle {
             // startInternal() permits STARTING_PREP to STARTING
             // stopInternal() permits STOPPING_PREP to STOPPING and FAILED to
             // STOPPING
+            //内部改变生命周期状态限制在下面范围内
             if (!(state == LifecycleState.FAILED ||
                     (this.state == LifecycleState.STARTING_PREP &&
                             state == LifecycleState.STARTING) ||
@@ -425,6 +428,7 @@ public abstract class LifecycleBase implements Lifecycle {
         this.state = state;
         String lifecycleEvent = state.getLifecycleEvent();
         if (lifecycleEvent != null) {
+            //通知监听器触发相应事件
             fireLifecycleEvent(lifecycleEvent, data);
         }
     }

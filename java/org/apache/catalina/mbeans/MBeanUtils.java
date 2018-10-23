@@ -238,10 +238,10 @@ public class MBeanUtils {
      */
     static DynamicMBean createMBean(Role role)
         throws Exception {
-
+        //实际获取简单类名
         String mname = createManagedName(role);
         ManagedBean managed = registry.findManagedBean(mname);
-        if (managed == null) {
+        if (managed == null) {//没有MBean描述文件中
             Exception e = new Exception("ManagedBean is not found with "+mname);
             throw new MBeanException(e);
         }

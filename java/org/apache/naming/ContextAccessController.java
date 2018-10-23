@@ -86,6 +86,7 @@ public class ContextAccessController {
     public static boolean checkSecurityToken
         (Object name, Object token) {
         Object refToken = securityTokens.get(name);
+        //不存在 或 和已存在的相等
         return (refToken == null || refToken.equals(token));
     }
 

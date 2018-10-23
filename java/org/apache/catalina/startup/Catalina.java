@@ -679,7 +679,7 @@ public class Catalina {
     public void start() {
 
         if (getServer() == null) {
-            load();
+            load();//里面做好了server的解析、和各个容器、组件的初始化
         }
 
         if (getServer() == null) {

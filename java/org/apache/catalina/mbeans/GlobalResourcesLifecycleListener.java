@@ -127,6 +127,7 @@ public class GlobalResourcesLifecycleListener implements LifecycleListener {
         }
 
         try {
+            //拿到JNDI中所有对象
             NamingEnumeration<Binding> bindings = context.listBindings("");
             while (bindings.hasMore()) {
                 Binding binding = bindings.next();
@@ -136,9 +137,11 @@ public class GlobalResourcesLifecycleListener implements LifecycleListener {
                     log.debug("Checking resource " + name);
                 }
                 if (value instanceof Context) {
+                    //如果是Context，那就是子容器，递归
                     createMBeans(name + "/", (Context) value);
                 } else if (value instanceof UserDatabase) {
                     try {
+                        //注册数据库
                         createMBeans(name, (UserDatabase) value);
                     } catch (Exception e) {
                         log.error("Exception creating UserDatabase MBeans for " + name, e);

@@ -1071,7 +1071,7 @@ public abstract class AbstractEndpoint<S,U> {
             getLog().warn(sm.getString("endpoint.invalidJmxNameSslHost",
                     sslHostConfig.getHostName()), e);
         }
-
+        //证书也注册下
         for (SSLHostConfigCertificate sslHostConfigCert : sslHostConfig.getCertificates()) {
             ObjectName sslCertOname = null;
             try {

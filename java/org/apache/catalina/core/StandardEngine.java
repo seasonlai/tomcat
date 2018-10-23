@@ -67,6 +67,7 @@ public class StandardEngine extends ContainerBase implements Engine {
         pipeline.setBasic(new StandardEngineValve());
         /* Set the jmvRoute using the system property jvmRoute */
         try {
+            //集群用到的唯一标识
             setJvmRoute(System.getProperty("jvmRoute"));
         } catch(Exception ex) {
             log.warn(sm.getString("standardEngine.jvmRouteFail"));

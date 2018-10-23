@@ -78,6 +78,7 @@ public abstract class AbstractJsseEndpoint<S,U> extends AbstractEndpoint<S,U> {
 
     protected void initialiseSsl() throws Exception {
         if (isSSLEnabled()) {
+            //默认是OpenSSLImplementation
             sslImplementation = SSLImplementation.getInstance(getSslImplementationName());
 
             for (SSLHostConfig sslHostConfig : sslHostConfigs.values()) {

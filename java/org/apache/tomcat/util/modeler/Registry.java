@@ -481,6 +481,7 @@ public class Registry implements RegistryMBean, MBeanRegistration {
         }
 
         // first look for existing descriptor
+        //从已经加载的描述中寻找
         ManagedBean managed = findManagedBean(type);
 
         // Search for a descriptor in the same package
@@ -594,6 +595,7 @@ public class Registry implements RegistryMBean, MBeanRegistration {
         if (sourceType == null) {
             sourceType = "MbeansDescriptorsDigesterSource";
         }
+        //创建MbeansDescriptorsDigesterSource类
         ModelerSource ds = getModelerSource(sourceType);
         List<ObjectName> mbeans = ds.loadDescriptors(this, type, inputsource);
 
@@ -633,6 +635,7 @@ public class Registry implements RegistryMBean, MBeanRegistration {
                 if (log.isDebugEnabled()) {
                     log.debug("Unregistering existing component " + oname);
                 }
+                //存在就先取消注册
                 getMBeanServer().unregisterMBean(oname);
             }
 
@@ -672,6 +675,7 @@ public class Registry implements RegistryMBean, MBeanRegistration {
         log.debug("Found " + dURL);
         searchedPaths.put(packageName, dURL);
         try {
+            //这里会解析相关描述文件，创建相关MBean，并注册到Registry
             load("MbeansDescriptorsDigesterSource", dURL, null);
         } catch (Exception ex) {
             log.error("Error loading " + dURL);
@@ -704,10 +708,12 @@ public class Registry implements RegistryMBean, MBeanRegistration {
             int lastComp = pkg.lastIndexOf(".");
             if (lastComp <= 0)
                 return;
+            //拿到包名
             pkg = pkg.substring(0, lastComp);
             if (searchedPaths.get(pkg) != null) {
                 return;
             }
+            //加载解析指定包的描述文件
             loadDescriptors(pkg, classLoader);
         }
     }

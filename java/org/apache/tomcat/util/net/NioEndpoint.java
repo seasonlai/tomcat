@@ -210,11 +210,11 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
         initServerSocket();
 
         // Initialize thread count defaults for acceptor, poller
-        if (acceptorThreadCount == 0) {
+        if (acceptorThreadCount == 0) {//接受请求线程至少为1
             // FIXME: Doesn't seem to work that well with multiple accept threads
             acceptorThreadCount = 1;
         }
-        if (pollerThreadCount <= 0) {
+        if (pollerThreadCount <= 0) {//轮询线程至少为1
             //minimum one poller thread
             pollerThreadCount = 1;
         }
@@ -230,9 +230,12 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
     // implement custom [server]sockets
     protected void initServerSocket() throws Exception {
         if (!getUseInheritedChannel()) {
+            //nio编程
             serverSock = ServerSocketChannel.open();
+            //设置socket的一些属性
             socketProperties.setProperties(serverSock.socket());
             InetSocketAddress addr = (getAddress()!=null?new InetSocketAddress(getAddress(),getPort()):new InetSocketAddress(getPort()));
+            //默认AcceptCount是100
             serverSock.socket().bind(addr,getAcceptCount());
         } else {
             // Retrieve the channel provided by the OS
@@ -244,6 +247,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
                 throw new IllegalArgumentException(sm.getString("endpoint.init.bind.inherited"));
             }
         }
+        //为啥还要阻塞，servlet规范？？？
         serverSock.configureBlocking(true); //mimic APR behavior
     }
 

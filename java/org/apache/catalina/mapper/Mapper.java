@@ -103,20 +103,23 @@ public final class Mapper {
      */
     public synchronized void addHost(String name, String[] aliases,
                                      Host host) {
+        //把以*.开头的*去掉，即去掉通配符
         name = renameWildcardHost(name);
         MappedHost[] newHosts = new MappedHost[hosts.length + 1];
         MappedHost newHost = new MappedHost(name, host);
         if (insertMap(hosts, newHosts, newHost)) {
-            hosts = newHosts;
+            hosts = newHosts;//赋值新的数组
             if (newHost.name.equals(defaultHostName)) {
-                defaultHost = newHost;
+                defaultHost = newHost;//赋值默认Host
             }
             if (log.isDebugEnabled()) {
                 log.debug(sm.getString("mapper.addHost.success", name));
             }
         } else {
+            //拿到重复的
             MappedHost duplicate = hosts[find(hosts, name)];
             if (duplicate.object == host) {
+            //如果是同一个
                 // The host is already registered in the mapper.
                 // E.g. it might have been added by addContextVersion()
                 if (log.isDebugEnabled()) {
@@ -133,13 +136,14 @@ public final class Mapper {
         }
         List<MappedHost> newAliases = new ArrayList<>(aliases.length);
         for (String alias : aliases) {
+
             alias = renameWildcardHost(alias);
             MappedHost newAlias = new MappedHost(alias, newHost);
             if (addHostAliasImpl(newAlias)) {
-                newAliases.add(newAlias);
+                newAliases.add(newAlias);//加入成功在加入newAliases集合
             }
         }
-        newHost.addAliases(newAliases);
+        newHost.addAliases(newAliases);//给Host添加别名
     }
 
 
@@ -199,6 +203,7 @@ public final class Mapper {
             return true;
         } else {
             MappedHost duplicate = hosts[find(hosts, newAlias.name)];
+            //已存在了相同的别名
             if (duplicate.getRealHost() == newAlias.getRealHost()) {
                 // A duplicate Alias for the same Host.
                 // A harmless redundancy. E.g.
@@ -1305,33 +1310,33 @@ public final class Mapper {
 
         // Special cases: -1 and 0
         if (b == -1) {
-            return -1;
+            return -1;//数组为空
         }
-
+        //比第一个都小，直接返回-1
         if (name.compareTo(map[0].name) < 0) {
             return -1;
         }
-        if (b == 0) {
+        if (b == 0) {//只有一个元素，而且上面比较过了
             return 0;
         }
 
         int i = 0;
         while (true) {
-            i = (b + a) >>> 1;
+            i = (b + a) >>> 1;//二分法
             int result = name.compareTo(map[i].name);
-            if (result > 0) {
+            if (result > 0) {//查右边
                 a = i;
-            } else if (result == 0) {
+            } else if (result == 0) {//直接返回
                 return i;
-            } else {
+            } else {//查左边
                 b = i;
             }
-            if ((b - a) == 1) {
+            if ((b - a) == 1) {//只剩一个
                 int result2 = name.compareTo(map[b].name);
-                if (result2 < 0) {
+                if (result2 < 0) {//插入左边
                     return a;
                 } else {
-                    return b;
+                    return b;//插入右边
                 }
             }
         }
@@ -1512,12 +1517,16 @@ public final class Mapper {
      */
     private static final <T> boolean insertMap
         (MapElement<T>[] oldMap, MapElement<T>[] newMap, MapElement<T> newElement) {
+        //按名字升序排的，找到相应要插入的位置
         int pos = find(oldMap, newElement.name);
         if ((pos != -1) && (newElement.name.equals(oldMap[pos].name))) {
-            return false;
+            return false;//存在相同名称，返回false
         }
+        //复制插入位置前的对象
         System.arraycopy(oldMap, 0, newMap, 0, pos + 1);
+        //添加到最后
         newMap[pos + 1] = newElement;
+        //复制插入位置后的对象
         System.arraycopy
             (oldMap, pos + 1, newMap, pos + 2, oldMap.length - pos - 1);
         return true;
@@ -1548,6 +1557,7 @@ public final class Mapper {
      * wild card host names from the external to internal form.
      */
     private static String renameWildcardHost(String hostName) {
+        //把开头*号去掉
         if (hostName != null && hostName.startsWith("*.")) {
             return hostName.substring(1);
         } else {
@@ -1558,7 +1568,7 @@ public final class Mapper {
 
     // ------------------------------------------------- MapElement Inner Class
 
-
+    //两个成员，一个键，一个值
     protected abstract static class MapElement<T> {
 
         public final String name;
@@ -1605,7 +1615,7 @@ public final class Mapper {
 
         /**
          * Constructor used for an Alias
-         *
+         * 用于别名
          * @param alias    The alias of the virtual host
          * @param realHost The host the alias points to
          */
@@ -1652,7 +1662,7 @@ public final class Mapper {
     protected static final class ContextList {
 
         public final MappedContext[] contexts;
-        public final int nesting;
+        public final int nesting;//嵌套数吗
 
         public ContextList() {
             this(new MappedContext[0], 0);
@@ -1665,7 +1675,9 @@ public final class Mapper {
 
         public ContextList addContext(MappedContext mappedContext,
                 int slashCount) {
+            //重新创建数组，数量+1
             MappedContext[] newContexts = new MappedContext[contexts.length + 1];
+
             if (insertMap(contexts, newContexts, mappedContext)) {
                 return new ContextList(newContexts, Math.max(nesting,
                         slashCount));
@@ -1698,16 +1710,16 @@ public final class Mapper {
             this.versions = new ContextVersion[] { firstVersion };
         }
     }
-
+    //这个Context是tomcat中的Context
     protected static final class ContextVersion extends MapElement<Context> {
         public final String path;
         public final int slashCount;
         public final WebResourceRoot resources;
-        public String[] welcomeResources;
-        public MappedWrapper defaultWrapper = null;
-        public MappedWrapper[] exactWrappers = new MappedWrapper[0];
-        public MappedWrapper[] wildcardWrappers = new MappedWrapper[0];
-        public MappedWrapper[] extensionWrappers = new MappedWrapper[0];
+        public String[] welcomeResources;//欢迎页吗
+        public MappedWrapper defaultWrapper = null;//默认wrapper
+        public MappedWrapper[] exactWrappers = new MappedWrapper[0];//具体确认的wrapper
+        public MappedWrapper[] wildcardWrappers = new MappedWrapper[0];//通配符wrapper
+        public MappedWrapper[] extensionWrappers = new MappedWrapper[0];//扩张wrapper
         public int nesting = 0;
         private volatile boolean paused;
 
@@ -1732,10 +1744,11 @@ public final class Mapper {
 
     // ---------------------------------------------------- Wrapper Inner Class
 
-
+    //Wrapper继承Container
     protected static class MappedWrapper extends MapElement<Wrapper> {
-
+        //jsp通配符？
         public final boolean jspWildCard;
+        //什么鬼？
         public final boolean resourceOnly;
 
         public MappedWrapper(String name, Wrapper wrapper, boolean jspWildCard,

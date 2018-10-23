@@ -49,19 +49,23 @@ public final class ContextName {
         // Convert Context names and display names to base names
 
         // Strip off any leading "/"
+        //跳过开头的"/"
         if (tmp1.startsWith("/")) {
             tmp1 = tmp1.substring(1);
         }
 
         // Replace any remaining /
+        //把“/”替换成“#”
         tmp1 = tmp1.replaceAll("/", FWD_SLASH_REPLACEMENT);
 
         // Insert the ROOT name if required
+        //如果##开头就加上ROOT
         if (tmp1.startsWith(VERSION_MARKER) || "".equals(tmp1)) {
             tmp1 = ROOT_NAME + tmp1;
         }
 
         // Remove any file extensions
+        //去掉文件扩展名
         if (stripFileExtension &&
                 (tmp1.toLowerCase(Locale.ENGLISH).endsWith(".war") ||
                         tmp1.toLowerCase(Locale.ENGLISH).endsWith(".xml"))) {
@@ -74,13 +78,15 @@ public final class ContextName {
         // Extract version number
         int versionIndex = baseName.indexOf(VERSION_MARKER);
         if (versionIndex > -1) {
+            //拿到版本号
             version = baseName.substring(versionIndex + 2);
+            //拿到项目名
             tmp2 = baseName.substring(0, versionIndex);
         } else {
             version = "";
             tmp2 = baseName;
         }
-
+        //下面说明了，自动以文件夹名作为访问路径
         if (ROOT_NAME.equals(tmp2)) {
             path = "";
         } else {

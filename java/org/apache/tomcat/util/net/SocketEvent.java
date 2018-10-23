@@ -20,6 +20,7 @@ package org.apache.tomcat.util.net;
  * Defines events that occur per socket that require further processing by the
  * container. Usually these events are triggered by the socket implementation
  * but they may be triggered by the container.
+ * 定义了各种socket的时间，供容器判断
  */
 public enum SocketEvent {
 

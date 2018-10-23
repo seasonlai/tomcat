@@ -761,7 +761,7 @@ public class ContextConfig implements LifecycleListener {
                     Boolean.valueOf(context.getXmlValidation()),
                     Boolean.valueOf(context.getXmlNamespaceAware())));
         }
-
+        //解析web.xml
         webConfig();
 
         if (!context.getIgnoreAnnotations()) {
@@ -1103,6 +1103,7 @@ public class ContextConfig implements LifecycleListener {
         WebXml webXml = createWebXml();
 
         // Parse context level web.xml
+        //拿到web应用的web.xml
         InputSource contextWebXml = getContextWebXmlSource();
         if (!webXmlParser.parseWebXml(contextWebXml, webXml, false)) {
             ok = false;
@@ -1125,12 +1126,14 @@ public class ContextConfig implements LifecycleListener {
 
         // Step 3. Look for ServletContainerInitializer implementations
         if (ok) {
+            //实例化ServletContainerInitializer
             processServletContainerInitializers();
         }
 
         if  (!webXml.isMetadataComplete() || typeInitializerMap.size() > 0) {
             // Step 4. Process /WEB-INF/classes for annotations and
             // @HandlesTypes matches
+            //处理注解
             Map<String,JavaClassCacheEntry> javaClassCache = new HashMap<>();
 
             if (ok) {
@@ -1485,8 +1488,9 @@ public class ContextConfig implements LifecycleListener {
         Host host = (Host) context.getParent();
 
         DefaultWebXmlCacheEntry entry = hostWebXmlCache.get(host);
-
+        //全局一般是conf/web.xml
         InputSource globalWebXml = getGlobalWebXmlSource();
+        //host的一般是web.xml.default
         InputSource hostWebXml = getHostWebXmlSource();
 
         long globalTimeStamp = 0;
@@ -1534,6 +1538,7 @@ public class ContextConfig implements LifecycleListener {
 
         if (entry != null && entry.getGlobalTimeStamp() == globalTimeStamp &&
                 entry.getHostTimeStamp() == hostTimeStamp) {
+            //两个文件修改时间都是一样就关闭
             InputSourceUtil.close(globalWebXml);
             InputSourceUtil.close(hostWebXml);
             return entry.getWebXml();
@@ -1543,6 +1548,7 @@ public class ContextConfig implements LifecycleListener {
         // make sure it only happens once. Use the pipeline since a lock will
         // already be held on the host by another thread
         synchronized (host.getPipeline()) {
+            //double check了啦
             entry = hostWebXmlCache.get(host);
             if (entry != null && entry.getGlobalTimeStamp() == globalTimeStamp &&
                     entry.getHostTimeStamp() == hostTimeStamp) {
@@ -1583,6 +1589,7 @@ public class ContextConfig implements LifecycleListener {
             if (globalTimeStamp != -1 && hostTimeStamp != -1) {
                 entry = new DefaultWebXmlCacheEntry(webXmlDefaultFragment,
                         globalTimeStamp, hostTimeStamp);
+                //加入缓存
                 hostWebXmlCache.put(host, entry);
             }
 
@@ -2091,6 +2098,7 @@ public class ContextConfig implements LifecycleListener {
             String className = clazz.getClassName();
             for (AnnotationEntry ae : annotationsEntries) {
                 String type = ae.getAnnotationType();
+                //对注解做不同的处理
                 if ("Ljavax/servlet/annotation/WebServlet;".equals(type)) {
                     processAnnotationWebServlet(className, ae, fragment);
                 }else if ("Ljavax/servlet/annotation/WebFilter;".equals(type)) {

@@ -214,6 +214,7 @@ public class HostConfig implements LifecycleListener {
         if (Globals.IS_SECURITY_ENABLED && !deployThisXML) {
             // When running under a SecurityManager, deployXML may be overridden
             // on a per Context basis by the granting of a specific permission
+            //权限检查
             Policy currentPolicy = Policy.getPolicy();
             if (currentPolicy != null) {
                 URL contextRootUrl;
@@ -289,6 +290,7 @@ public class HostConfig implements LifecycleListener {
         try {
             host = (Host) event.getLifecycle();
             if (host instanceof StandardHost) {
+                //设置变量
                 setCopyXML(((StandardHost) host).isCopyXML());
                 setDeployXML(((StandardHost) host).isDeployXML());
                 setUnpackWARs(((StandardHost) host).isUnpackWARs());
@@ -439,7 +441,7 @@ public class HostConfig implements LifecycleListener {
      * @return  The filtered list of application paths
      */
     protected String[] filterAppPaths(String[] unfilteredAppPaths) {
-        Pattern filter = host.getDeployIgnorePattern();
+        Pattern filter = host.getDeployIgnorePattern();//过滤规则
         if (filter == null || unfilteredAppPaths == null) {
             return unfilteredAppPaths;
         }
@@ -730,13 +732,14 @@ public class HostConfig implements LifecycleListener {
             File war = new File(appBase, files[i]);
             if (files[i].toLowerCase(Locale.ENGLISH).endsWith(".war") &&
                     war.isFile() && !invalidWars.contains(files[i]) ) {
-
+                //Context的名称，以文件名（去掉扩展名）命名
                 ContextName cn = new ContextName(files[i], true);
-
+                //TODO 有一个serviced数组记录着，在这个数组里面就不部署
                 if (isServiced(cn.getName())) {
                     continue;
                 }
                 if (deploymentExists(cn.getName())) {
+                    //如果已经发布
                     DeployedApplication app = deployed.get(cn.getName());
                     boolean unpackWAR = unpackWARs;
                     if (unpackWAR && host.findChild(cn.getName()) instanceof StandardContext) {
@@ -762,13 +765,14 @@ public class HostConfig implements LifecycleListener {
                 }
 
                 // Check for WARs with /../ /./ or similar sequences in the name
+                //不能有../这些符号
                 if (!validateContextPath(appBase, cn.getBaseName())) {
                     log.error(sm.getString(
                             "hostConfig.illegalWarName", files[i]));
                     invalidWars.add(files[i]);
                     continue;
                 }
-
+                //终于开干了
                 results.add(es.submit(new DeployWar(this, cn, war)));
             }
         }
@@ -781,13 +785,14 @@ public class HostConfig implements LifecycleListener {
                         "hostConfig.deployWar.threaded.error"), e);
             }
         }
+        //等待所有任务完成
     }
 
 
     private boolean validateContextPath(File appBase, String contextPath) {
         // More complicated than the ideal as the canonical path may or may
         // not end with File.separator for a directory
-
+        //就为了检查contextPath是否有../这种相对符号
         StringBuilder docBase;
         String canonicalDocBase = null;
 
@@ -795,6 +800,7 @@ public class HostConfig implements LifecycleListener {
             String canonicalAppBase = appBase.getCanonicalPath();
             docBase = new StringBuilder(canonicalAppBase);
             if (canonicalAppBase.endsWith(File.separator)) {
+                //为什么从第二个字符开始截取
                 docBase.append(contextPath.substring(1).replace(
                         '/', File.separatorChar));
             } else {
@@ -826,13 +832,13 @@ public class HostConfig implements LifecycleListener {
      * @param war The WAR file
      */
     protected void deployWAR(ContextName cn, File war) {
-
+        //拿到META-INF/context.xml文件，用于XML方式发布
         File xml = new File(host.getAppBaseFile(),
                 cn.getBaseName() + "/" + Constants.ApplicationContextXml);
-
+        //拿到/META-INF/war-tracker文件
         File warTracker = new File(host.getAppBaseFile(), cn.getBaseName() + Constants.WarTracker);
 
-        boolean xmlInWar = false;
+        boolean xmlInWar = false;//一般在web应用了都没有context.xml文件吧
         try (JarFile jar = new JarFile(war)) {
             JarEntry entry = jar.getJarEntry(Constants.ApplicationContextXml);
             if (entry != null) {
@@ -848,6 +854,7 @@ public class HostConfig implements LifecycleListener {
         boolean useXml = false;
         // If the xml file exists then expandedDir must exists so no need to
         // test that here
+        //使用xml方法发布
         if (xml.exists() && unpackWARs &&
                 (!warTracker.exists() || warTracker.lastModified() == war.lastModified())) {
             useXml = true;
@@ -874,6 +881,7 @@ public class HostConfig implements LifecycleListener {
                 }
                 context.setConfigFile(xml.toURI().toURL());
             } else if (deployThisXML && xmlInWar) {
+                //
                 synchronized (digesterLock) {
                     try (JarFile jar = new JarFile(war)) {
                         JarEntry entry = jar.getJarEntry(Constants.ApplicationContextXml);
@@ -894,12 +902,14 @@ public class HostConfig implements LifecycleListener {
                     }
                 }
             } else if (!deployThisXML && xmlInWar) {
+                //报错了
                 // Block deployment as META-INF/context.xml may contain security
                 // configuration necessary for a secure deployment.
                 log.error(sm.getString("hostConfig.deployDescriptor.blocked",
                         cn.getPath(), Constants.ApplicationContextXml,
                         new File(host.getConfigBaseFile(), cn.getBaseName() + ".xml")));
             } else {
+                //一般是这种吧
                 context = (Context) Class.forName(contextClass).getConstructor().newInstance();
             }
         } catch (Throwable t) {
@@ -920,11 +930,13 @@ public class HostConfig implements LifecycleListener {
 
             // If Host is using default value Context can override it.
             if (!copyThisXml && context instanceof StandardContext) {
+                //所以context的优先级高
                 copyThisXml = ((StandardContext) context).getCopyXML();
             }
 
             if (xmlInWar && copyThisXml) {
                 // Change location of XML file to config base
+                //开始复制到配置的目录下，文件名字项目名.xml
                 xml = new File(host.getConfigBaseFile(),
                         cn.getBaseName() + ".xml");
                 try (JarFile jar = new JarFile(war)) {
@@ -961,14 +973,16 @@ public class HostConfig implements LifecycleListener {
 
         try {
             // Populate redeploy resources with the WAR file
+            //记录war的上次修改时间
             deployedApp.redeployResources.put
                 (war.getAbsolutePath(), Long.valueOf(war.lastModified()));
-
+            //如果是XML方式发布，就记录xml文件的修改时间
             if (deployThisXML && xml.exists() && copyThisXml) {
                 deployedApp.redeployResources.put(xml.getAbsolutePath(),
                         Long.valueOf(xml.lastModified()));
             } else {
                 // In case an XML file is added to the config base later
+                //会自动添加一个xml文件
                 deployedApp.redeployResources.put(
                         (new File(host.getConfigBaseFile(),
                                 cn.getBaseName() + ".xml")).getAbsolutePath(),
@@ -996,7 +1010,9 @@ public class HostConfig implements LifecycleListener {
                 unpackWAR = ((StandardContext) context).getUnpackWAR();
             }
             if (unpackWAR && context.getDocBase() != null) {
+                //不解压war包
                 File docBase = new File(host.getAppBaseFile(), cn.getBaseName());
+                //记录war的上次修改时间
                 deployedApp.redeployResources.put(docBase.getAbsolutePath(),
                         Long.valueOf(docBase.lastModified()));
                 addWatchedResources(deployedApp, docBase.getAbsolutePath(),
@@ -1012,6 +1028,7 @@ public class HostConfig implements LifecycleListener {
             }
             // Add the global redeploy resources (which are never deleted) at
             // the end so they don't interfere with the deletion process
+            //监听全局的资源文件context.xml.default、conf/context.xml
             addGlobalRedeployResources(deployedApp);
         }
 
@@ -1241,6 +1258,7 @@ public class HostConfig implements LifecycleListener {
             if(log.isDebugEnabled())
                 log.debug("Watching WatchedResource '" +
                         resource.getAbsolutePath() + "'");
+            //添加监听的资源
             app.reloadResources.put(resource.getAbsolutePath(),
                     Long.valueOf(resource.lastModified()));
         }
@@ -1545,9 +1563,9 @@ public class HostConfig implements LifecycleListener {
 
 
     public void beforeStart() {
-        if (host.getCreateDirs()) {
+        if (host.getCreateDirs()) {//StandardHost默认为true
             File[] dirs = new File[] {host.getAppBaseFile(),host.getConfigBaseFile()};
-            for (int i=0; i<dirs.length; i++) {
+            for (int i=0; i<dirs.length; i++) {//检查一下文件目录
                 if (!dirs[i].mkdirs() && !dirs[i].isDirectory()) {
                     log.error(sm.getString("hostConfig.createDirs",dirs[i]));
                 }
@@ -1568,6 +1586,7 @@ public class HostConfig implements LifecycleListener {
             ObjectName hostON = host.getObjectName();
             oname = new ObjectName
                 (hostON.getDomain() + ":type=Deployer,host=" + host.getName());
+            //注册到JMX
             Registry.getRegistry(null, null).registerComponent
                 (this, oname, this.getClass().getName());
         } catch (Exception e) {
@@ -1577,6 +1596,7 @@ public class HostConfig implements LifecycleListener {
         if (!host.getAppBaseFile().isDirectory()) {
             log.error(sm.getString("hostConfig.appBase", host.getName(),
                     host.getAppBaseFile().getPath()));
+            //不是个目录那就不自动部署了，启动的时候也不部署
             host.setDeployOnStartup(false);
             host.setAutoDeploy(false);
         }

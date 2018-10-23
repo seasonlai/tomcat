@@ -327,6 +327,7 @@ public class ManagedBean implements java.io.Serializable {
                      getClassName());
             }
         }
+        //上面实例化BaseModelMBean
 
         mbean.setManagedBean(this);
 

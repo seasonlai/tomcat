@@ -151,7 +151,7 @@ public class MapperListener extends LifecycleMBeanBase
 
         if (Container.ADD_CHILD_EVENT.equals(event.getType())) {
             Container child = (Container) event.getData();
-            addListeners(child);
+            addListeners(child);//把当前监听类添加到子容器
             // If child is started then it is too late for life-cycle listener
             // to register the child so register it here
             if (child.getState().isAvailable()) {
@@ -270,6 +270,7 @@ public class MapperListener extends LifecycleMBeanBase
             Container[] containers = engine.findChildren();
 
             for (Container container : containers) {
+                //先比较名称，再比较别名
                 Host host = (Host) container;
                 if (defaultHost.equalsIgnoreCase(host.getName())) {
                     found = true;
@@ -286,7 +287,7 @@ public class MapperListener extends LifecycleMBeanBase
             }
         }
 
-        if (found) {
+        if (found) {//找到再设置
             mapper.setDefaultHostName(defaultHost);
         } else {
             log.error(sm.getString("mapperListener.unknownDefaultHost", defaultHost, service));
@@ -298,11 +299,13 @@ public class MapperListener extends LifecycleMBeanBase
      * Register host.
      */
     private void registerHost(Host host) {
-
+        //别名
         String[] aliases = host.findAliases();
+        //加入Host数组
         mapper.addHost(host.getName(), aliases, host);
 
         for (Container container : host.findChildren()) {
+            //注册Context
             if (container.getState().isAvailable()) {
                 registerContext((Context) container);
             }

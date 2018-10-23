@@ -758,7 +758,8 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      */
     @Override
     protected void startInternal() throws LifecycleException {
-
+        //通知监听器触发CONFIGURE_START_EVENT事件
+        //NamingContextListener类有该事件相关处理
         fireLifecycleEvent(CONFIGURE_START_EVENT, null);
         setState(LifecycleState.STARTING);
 

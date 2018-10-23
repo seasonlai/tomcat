@@ -225,7 +225,7 @@ public class NamingContextListener
         } else {
             return;
         }
-
+        //
         if (Lifecycle.CONFIGURE_START_EVENT.equals(event.getType())) {
 
             if (initialized)
@@ -233,7 +233,9 @@ public class NamingContextListener
 
             try {
                 Hashtable<String, Object> contextEnv = new Hashtable<>();
+                //初始化JNDI的Context
                 namingContext = new NamingContext(contextEnv, getName());
+                //TODO 都是做缓存工作，用来干什么暂时不知道
                 ContextAccessController.setSecurityToken(getName(), token);
                 ContextAccessController.setSecurityToken(container, token);
                 ContextBindings.bindContext(container, namingContext, token);
@@ -249,12 +251,13 @@ public class NamingContextListener
                 ContextAccessController.setWritable(getName(), token);
 
                 try {
+                    //添加各种子JNDI context
                     createNamingContext();
                 } catch (NamingException e) {
                     log.error
                         (sm.getString("naming.namingContextCreationFailed", e));
                 }
-
+                //添加监听器到namingResources
                 namingResources.addPropertyChangeListener(this);
 
                 // Binding the naming context to the class loader
@@ -262,6 +265,7 @@ public class NamingContextListener
                     // Setting the context in read only mode
                     ContextAccessController.setReadOnly(getName());
                     try {
+                        //绑定classloader
                         ContextBindings.bindClassLoader(container, token,
                                 ((Context) container).getLoader().getClassLoader());
                     } catch (NamingException e) {
@@ -270,15 +274,18 @@ public class NamingContextListener
                 }
 
                 if (container instanceof Server) {
+                    //设置全局的server
                     org.apache.naming.factory.ResourceLinkFactory.setGlobalContext
                         (namingContext);
                     try {
+
                         ContextBindings.bindClassLoader(container, token,
                                 this.getClass().getClassLoader());
                     } catch (NamingException e) {
                         log.error(sm.getString("naming.bindFailed", e));
                     }
                     if (container instanceof StandardServer) {
+                        //设置JNDI
                         ((StandardServer) container).setGlobalNamingContext
                             (namingContext);
                     }

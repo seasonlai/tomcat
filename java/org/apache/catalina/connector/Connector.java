@@ -99,7 +99,7 @@ public class Connector extends LifecycleMBeanBase  {
         // Instantiate protocol handler
         ProtocolHandler p = null;
         try {
-            //反射实例化
+            //反射实例化，默认org.apache.coyote.http11.Http11NioProtocol
             Class<?> clazz = Class.forName(protocolHandlerClassName);
             p = (ProtocolHandler) clazz.getConstructor().newInstance();
         } catch (Exception e) {

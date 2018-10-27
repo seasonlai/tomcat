@@ -995,6 +995,7 @@ public abstract class AbstractEndpoint<S,U> {
             if (socketWrapper == null) {
                 return false;
             }
+            //从缓存中拿一个之前用过的对象
             SocketProcessorBase<S> sc = processorCache.pop();
             if (sc == null) {
                 sc = createSocketProcessor(socketWrapper, event);

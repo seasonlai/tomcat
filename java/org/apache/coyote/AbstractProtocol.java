@@ -552,6 +552,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
         endpoint.start();
 
         // Start async timeout thread
+        //异步请求超时处理
         asyncTimeout = new AsyncTimeout();
         Thread timeoutThread = new Thread(asyncTimeout, getNameInternal() + "-AsyncTimeout");
         int priority = endpoint.getThreadPriority();
@@ -758,14 +759,14 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                 }
                 if (processor == null) {
                     processor = getProtocol().createProcessor();
-                    register(processor);
+                    register(processor);//注册到JMX
                 }
 
                 processor.setSslSupport(
                         wrapper.getSslSupport(getProtocol().getClientCertProvider()));
 
                 // Associate the processor with the connection
-                connections.put(socket, processor);
+                connections.put(socket, processor);//加入映射
 
                 SocketState state = SocketState.CLOSED;
                 do {

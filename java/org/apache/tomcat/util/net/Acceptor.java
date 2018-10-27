@@ -80,10 +80,12 @@ public class Acceptor<U> implements Runnable {
 
             try {
                 //if we have reached max connections, wait
+                //增加连接数
                 endpoint.countUpOrAwaitConnection();
 
                 // Endpoint might have been paused while waiting for latch
                 // If that is the case, don't accept new connections
+                //在阻塞过程中被停止就不接受连接
                 if (endpoint.isPaused()) {
                     continue;
                 }
@@ -92,9 +94,11 @@ public class Acceptor<U> implements Runnable {
                 try {
                     // Accept the next incoming connection from the server
                     // socket
+                    //接收一个套接字
                     socket = endpoint.serverSocketAccept();
                 } catch (Exception ioe) {
                     // We didn't get a socket
+                    //没连接成功就减少连接数
                     endpoint.countDownConnection();
                     if (endpoint.isRunning()) {
                         // Introduce delay if necessary
@@ -138,6 +142,7 @@ public class Acceptor<U> implements Runnable {
                 }
             }
         }
+        //跳出循环，状态变为ENDED
         state = AcceptorState.ENDED;
     }
 

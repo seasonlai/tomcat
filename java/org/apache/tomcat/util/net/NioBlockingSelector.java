@@ -225,6 +225,7 @@ public class NioBlockingSelector {
         }
 
         public void wakeup() {
+            //当wakeupCounter是-1的时候才wakeup（即selector.select(1000)的时候）
             if (wakeupCounter.addAndGet(1)==0) selector.wakeup();
         }
 
@@ -290,13 +291,16 @@ public class NioBlockingSelector {
                     events();
                     int keyCount = 0;
                     try {
+                        //wakeupCounter初始值为0
                         int i = wakeupCounter.get();
-                        if (i>0)
+                        if (i>0)//大于0是多个线程调用wakeup方法导致的？
                             keyCount = selector.selectNow();
                         else {
+                            //赋值-1，这是可以wakeup selector
                             wakeupCounter.set(-1);
                             keyCount = selector.select(1000);
                         }
+                        //重新赋值为0
                         wakeupCounter.set(0);
                         if (!run) break;
                     }catch ( NullPointerException x ) {
@@ -313,7 +317,7 @@ public class NioBlockingSelector {
                         log.error("",x);
                         continue;
                     }
-
+                    //拿到就绪的key
                     Iterator<SelectionKey> iterator = keyCount > 0 ? selector.selectedKeys().iterator() : null;
 
                     // Walk through the collection of ready keys and dispatch
@@ -323,7 +327,9 @@ public class NioBlockingSelector {
                         NioSocketWrapper attachment = (NioSocketWrapper)sk.attachment();
                         try {
                             iterator.remove();
+                            //这里对ready事件不感兴趣？
                             sk.interestOps(sk.interestOps() & (~sk.readyOps()));
+                            //只负责countdown？
                             if ( sk.isReadable() ) {
                                 countDown(attachment.getReadLatch());
                             }
@@ -348,6 +354,7 @@ public class NioBlockingSelector {
             if (selector.isOpen()) {
                 try {
                     // Cancels all remaining keys
+                    //
                     selector.selectNow();
                 }catch( Exception ignore ) {
                     if (log.isDebugEnabled())log.debug("",ignore);
@@ -422,10 +429,11 @@ public class NioBlockingSelector {
                         if (SelectionKey.OP_READ==(ops&SelectionKey.OP_READ))countDown(key.getReadLatch());
                     } else {
                         if (sk.isValid()) {
+                            //把当前的操作从感兴趣操作中取消
                             sk.interestOps(sk.interestOps() & (~ops));
                             if (SelectionKey.OP_WRITE==(ops&SelectionKey.OP_WRITE)) countDown(key.getWriteLatch());
                             if (SelectionKey.OP_READ==(ops&SelectionKey.OP_READ))countDown(key.getReadLatch());
-                            if (sk.interestOps()==0) {
+                            if (sk.interestOps()==0) {//为0就没有感觉兴趣
                                 sk.cancel();
                                 sk.attach(null);
                             }

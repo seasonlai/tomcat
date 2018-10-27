@@ -60,9 +60,12 @@ public class NioSelectorPool {
             new ConcurrentLinkedQueue<>();
 
     protected Selector getSharedSelector() throws IOException {
+        //SHARED根据环境变量org.apache.tomcat.util.net.NioSelectorShared决定
         if (SHARED && SHARED_SELECTOR == null) {
             synchronized ( NioSelectorPool.class ) {
+                //二次检查
                 if ( SHARED_SELECTOR == null )  {
+                    //拿到一个选择器
                     SHARED_SELECTOR = Selector.open();
                     log.info("Using a shared selector for servlet write/read");
                 }

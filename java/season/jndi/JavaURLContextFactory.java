@@ -12,6 +12,6 @@ public class JavaURLContextFactory implements ObjectFactory {
     @Override
     public Object getObjectInstance(Object obj, Name name, Context nameCtx, Hashtable<?, ?> environment) throws Exception {
 
-        return null;
+        return new SelectorContext((Hashtable<String, Object>) environment);
     }
 }

@@ -1,0 +1,2 @@
+keytool -genkey -alias tomcat -keyalg RSA -keypass tomcat -storepass tomcat -keystore D:/tomcat.jks
+keytool -genkey -alias client -keyalg RSA -keypass client -storepass client -keystore D:/client.jks

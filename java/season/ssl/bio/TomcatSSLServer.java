@@ -32,6 +32,7 @@ public class TomcatSSLServer {
         while (true) {
             try {
                 cntSocket = (SSLSocket) svrSocket.accept();
+                System.out.println("有新连接...");
                 ioRead = new BufferedReader(new InputStreamReader(cntSocket.getInputStream()));
                 ioWriter = new PrintWriter(cntSocket.getOutputStream());
                 while ((tmpMsg = ioRead.readLine()) != null) {

@@ -37,10 +37,10 @@ public class NioSSLServer {
     private ByteBuffer appOutData;
 
     public void run() throws Exception {
+        createServerSocket();
         createSSLContext();
         createSSLEngine();
         createBuff();
-        createServerSocket();
 
         while (true) {
             selector.select(1000);
@@ -55,11 +55,14 @@ public class NioSSLServer {
 
     private void handleRequest(SelectionKey key) throws IOException {
             if (key.isAcceptable()) {
+                System.out.println("accept...");
                 ServerSocketChannel ssc = (ServerSocketChannel) key.channel();
                 SocketChannel channel = ssc.accept();
                 channel.configureBlocking(false);
+                channel.register(selector,SelectionKey.OP_READ);
                 doHandShake(channel);
             } else if (key.isReadable()) {
+                System.out.println("read...");
                 if (sslEngine.getHandshakeStatus() == SSLEngineResult.HandshakeStatus.NOT_HANDSHAKING) {
                     SocketChannel sc = (SocketChannel) key.channel();
                     netInData.clear();
@@ -75,6 +78,7 @@ public class NioSSLServer {
                     sc.register(selector, SelectionKey.OP_WRITE);
                 }
             } else if (key.isWritable()) {
+                System.out.println("write...");
                 SocketChannel sc = (SocketChannel) key.channel();
                 netOutData.clear();
                 SSLEngineResult engineResult = sslEngine.wrap(appOutData, netOutData);
@@ -102,10 +106,13 @@ public class NioSSLServer {
                 case NEED_UNWRAP:
                     System.out.println("NEED_UNWRAP---");
                     netInData.clear();
-                    sc.read(netInData);
+                    int read = sc.read(netInData);
+                    if(read<0)break;
                     netInData.flip();
                     do {
                         sslEngine.unwrap(netInData, appInData);
+                        appInData.flip();
+                        System.out.println(new String(appInData.array()));
                         hsStatus = doTask();
                     } while (hsStatus == SSLEngineResult.HandshakeStatus.NEED_UNWRAP && netInData.remaining() > 0);
                     netInData.clear();
@@ -131,6 +138,7 @@ public class NioSSLServer {
     private SSLEngineResult.HandshakeStatus doTask() {
         Runnable task;
         while ((task = sslEngine.getDelegatedTask()) != null) {
+            System.out.println("开线程....");
             new Thread(task).start();
         }
         return sslEngine.getHandshakeStatus();
@@ -174,8 +182,7 @@ public class NioSSLServer {
         ServerSocketChannel serverChannel = ServerSocketChannel.open();
         serverChannel.configureBlocking(false);
         selector = Selector.open();
-        ServerSocket serverSocket = serverChannel.socket();
-        serverSocket.bind(new InetSocketAddress(port));
+        serverChannel.socket().bind(new InetSocketAddress(port));
         serverChannel.register(selector, SelectionKey.OP_ACCEPT);
     }
 

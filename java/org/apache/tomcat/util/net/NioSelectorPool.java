@@ -130,8 +130,11 @@ public class NioSelectorPool {
 
     public void open() throws IOException {
         enabled = true;
+        //用java的nio获取一个selector（单例模式）
         getSharedSelector();
+        //默认是true
         if (SHARED) {
+            //把上面selector包装到NioBlockingSelector
             blockingSelector = new NioBlockingSelector();
             blockingSelector.open(getSharedSelector());
         }

@@ -54,7 +54,9 @@ public class NioBlockingSelector {
     }
 
     public void open(Selector selector) {
+        //把selector赋值给成员变量
         sharedSelector = selector;
+        //
         poller = new BlockPoller();
         poller.selector = sharedSelector;
         poller.setDaemon(true);
@@ -296,13 +298,16 @@ public class NioBlockingSelector {
                         if (i>0)//大于0是多个线程调用wakeup方法导致的？
                             keyCount = selector.selectNow();
                         else {
-                            //赋值-1，这是可以wakeup selector
+                            /**
+                             * 赋值-1，即可以wakeup selector，
+                             * @see #wakeup
+                             */
                             wakeupCounter.set(-1);
                             keyCount = selector.select(1000);
                         }
                         //重新赋值为0
                         wakeupCounter.set(0);
-                        if (!run) break;
+                        if (!run) break;//tomcat停止退出
                     }catch ( NullPointerException x ) {
                         //sun bug 5076772 on windows JDK 1.5
                         if (selector==null) throw x;
@@ -317,19 +322,21 @@ public class NioBlockingSelector {
                         log.error("",x);
                         continue;
                     }
-                    //拿到就绪的key
+                    //当上面的keyCount大于0时，拿到就绪的key
                     Iterator<SelectionKey> iterator = keyCount > 0 ? selector.selectedKeys().iterator() : null;
 
                     // Walk through the collection of ready keys and dispatch
                     // any active event.
                     while (run && iterator != null && iterator.hasNext()) {
                         SelectionKey sk = iterator.next();
+                        //每个SelectionKey会绑定一个NioSocketWrapper对象
                         NioSocketWrapper attachment = (NioSocketWrapper)sk.attachment();
                         try {
+                            //nio编程
                             iterator.remove();
-                            //这里对ready事件不感兴趣？
+                            //对ready事件不感兴趣
                             sk.interestOps(sk.interestOps() & (~sk.readyOps()));
-                            //只负责countdown？
+                            //只负责countdown
                             if ( sk.isReadable() ) {
                                 countDown(attachment.getReadLatch());
                             }

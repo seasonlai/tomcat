@@ -1114,17 +1114,19 @@ public abstract class AbstractEndpoint<S,U> {
 
 
     protected final void startAcceptorThreads() {
+        //默认为1
         int count = getAcceptorThreadCount();
         acceptors = new ArrayList<>(count);
 
         for (int i = 0; i < count; i++) {
+            //创建一个Acceptor对象
             Acceptor<U> acceptor = new Acceptor<>(this);
             String threadName = getName() + "-Acceptor-" + i;
             acceptor.setThreadName(threadName);
             acceptors.add(acceptor);
             Thread t = new Thread(acceptor, threadName);
             t.setPriority(getAcceptorThreadPriority());
-            t.setDaemon(getDaemon());
+            t.setDaemon(getDaemon());//getDaemon默认为true，即设为守护线程
             t.start();
         }
     }

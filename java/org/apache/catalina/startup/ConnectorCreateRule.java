@@ -56,21 +56,26 @@ public class ConnectorCreateRule extends Rule {
     @Override
     public void begin(String namespace, String name, Attributes attributes)
             throws Exception {
+        //拿到Service实例
         Service svc = (Service)digester.peek();
         Executor ex = null;
+        //如果配置了executor节点，就设置到connector中
         if ( attributes.getValue("executor")!=null ) {
             ex = svc.getExecutor(attributes.getValue("executor"));
         }
+        //实例化Connector
         Connector con = new Connector(attributes.getValue("protocol"));
         if (ex != null) {
             //反射设值
             setExecutor(con, ex);
         }
+        //是否设置ssl实现类
         String sslImplementationName = attributes.getValue("sslImplementationName");
         if (sslImplementationName != null) {
             //反射设值
             setSSLImplementationName(con, sslImplementationName);
         }
+        //放入digester栈中
         digester.push(con);
     }
 

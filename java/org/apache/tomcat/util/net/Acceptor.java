@@ -64,6 +64,7 @@ public class Acceptor<U> implements Runnable {
         while (endpoint.isRunning()) {
 
             // Loop if endpoint is paused
+            //当endpoint被停止，就每隔50毫秒检测一下
             while (endpoint.isPaused() && endpoint.isRunning()) {
                 state = AcceptorState.PAUSED;
                 try {
@@ -80,7 +81,7 @@ public class Acceptor<U> implements Runnable {
 
             try {
                 //if we have reached max connections, wait
-                //增加连接数
+                //增加一条已连接数，当达到最大值会阻塞
                 endpoint.countUpOrAwaitConnection();
 
                 // Endpoint might have been paused while waiting for latch
@@ -94,11 +95,11 @@ public class Acceptor<U> implements Runnable {
                 try {
                     // Accept the next incoming connection from the server
                     // socket
-                    //接收一个套接字
+                    //接收一个套接字，nio是SocketChannel类型
                     socket = endpoint.serverSocketAccept();
                 } catch (Exception ioe) {
                     // We didn't get a socket
-                    //没连接成功就减少连接数
+                    //没连接成功就减少已连接数
                     endpoint.countDownConnection();
                     if (endpoint.isRunning()) {
                         // Introduce delay if necessary

@@ -99,7 +99,7 @@ public class Connector extends LifecycleMBeanBase  {
         // Instantiate protocol handler
         ProtocolHandler p = null;
         try {
-            //反射实例化，默认org.apache.coyote.http11.Http11NioProtocol
+            //反射实例化，从上面得知默认org.apache.coyote.http11.Http11NioProtocol
             Class<?> clazz = Class.forName(protocolHandlerClassName);
             p = (ProtocolHandler) clazz.getConstructor().newInstance();
         } catch (Exception e) {
@@ -913,7 +913,7 @@ public class Connector extends LifecycleMBeanBase  {
 
         // Make sure parseBodyMethodsSet has a default
         if (null == parseBodyMethodsSet) {
-            //反射设值
+            //反射设值，默认为POST
             setParseBodyMethods(getParseBodyMethods());
         }
 

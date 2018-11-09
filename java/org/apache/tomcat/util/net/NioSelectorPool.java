@@ -238,6 +238,7 @@ public class NioSelectorPool {
      */
     public int read(ByteBuffer buf, NioChannel socket, Selector selector, long readTimeout, boolean block) throws IOException {
         if ( SHARED && block ) {
+            //用了countdownlatch做阻塞处理，先注册读的感兴趣事件，再有poller轮询。
             return blockingSelector.read(buf,socket,readTimeout);
         }
         SelectionKey key = null;

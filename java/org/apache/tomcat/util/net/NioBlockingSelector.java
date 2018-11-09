@@ -158,8 +158,10 @@ public class NioBlockingSelector {
      * @throws IOException if an IO Exception occurs in the underlying socket logic
      */
     public int read(ByteBuffer buf, NioChannel socket, long readTimeout) throws IOException {
+        //·通过通道拿到对应选择器的key
         SelectionKey key = socket.getIOChannel().keyFor(socket.getPoller().getSelector());
         if ( key == null ) throw new IOException("Key no longer registered");
+        //KeyReference类重写了finalize方法，想在其中取消key
         KeyReference reference = keyReferenceStack.pop();
         if (reference == null) {
             reference = new KeyReference();
@@ -180,9 +182,9 @@ public class NioBlockingSelector {
                 try {
                     if ( att.getReadLatch()==null || att.getReadLatch().getCount()==0) att.startReadLatch(1);
                     poller.add(att,SelectionKey.OP_READ, reference);
-                    if (readTimeout < 0) {
+                    if (readTimeout < 0) {//无限制时间等
                         att.awaitReadLatch(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
-                    } else {
+                    } else {//带超时地等
                         att.awaitReadLatch(readTimeout, TimeUnit.MILLISECONDS);
                     }
                 } catch (InterruptedException ignore) {
@@ -190,7 +192,7 @@ public class NioBlockingSelector {
                 }
                 if ( att.getReadLatch()!=null && att.getReadLatch().getCount()> 0) {
                     //we got interrupted, but we haven't received notification from the poller.
-                    keycount = 0;
+                    keycount = 0;//这里是遇到中断异常了
                 }else {
                     //latch countdown has happened
                     keycount = 1;

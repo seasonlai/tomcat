@@ -50,6 +50,6 @@ public abstract class SocketProcessorBase<S> implements Runnable {
         }
     }
 
-
+    //模板方法给子类实现
     protected abstract void doRun();
 }

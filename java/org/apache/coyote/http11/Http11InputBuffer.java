@@ -688,7 +688,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
 
         wrapper = socketWrapper;
         wrapper.setAppReadBufHandler(this);
-
+        //头部最大缓存大小 + socket读的缓存大小
         int bufLength = headerBufferSize +
                 wrapper.getSocketBufferHandler().getReadBuffer().capacity();
         if (byteBuffer == null || byteBuffer.capacity() < bufLength) {
@@ -720,12 +720,15 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
         } else {
             byteBuffer.limit(end).position(end);
         }
-
+        //记录原先开始下标
         byteBuffer.mark();
         if (byteBuffer.position() < byteBuffer.limit()) {
+            //开始下标移到已读的最大下标
             byteBuffer.position(byteBuffer.limit());
         }
+        //可读最大下标移到最大容量
         byteBuffer.limit(byteBuffer.capacity());
+        //开始读数据
         int nRead = wrapper.read(block, byteBuffer);
         byteBuffer.limit(byteBuffer.position()).reset();
         if (nRead > 0) {

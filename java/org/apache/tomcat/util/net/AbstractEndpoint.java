@@ -693,6 +693,7 @@ public abstract class AbstractEndpoint<S,U> {
 
     /**
      * Handling of accepted sockets.
+     * 默认是ConnectionHandler
      */
     private Handler<S> handler = null;
     public void setHandler(Handler<S> handler ) { this.handler = handler; }
@@ -1003,6 +1004,7 @@ public abstract class AbstractEndpoint<S,U> {
                 sc.reset(socketWrapper, event);
             }
             Executor executor = getExecutor();
+            //所以dispatch为true的时候是会放进线程池中执行
             if (dispatch && executor != null) {
                 executor.execute(sc);
             } else {

@@ -696,6 +696,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
             // dispatched. Because of delays in the dispatch process, the
             // timeout may no longer be required. Check here and avoid
             // unnecessary processing.
+            //如果是超时时间并且（处理器为null或是同步或是异步但已超时）
             if (SocketEvent.TIMEOUT == status && (processor == null ||
                     !processor.isAsync() || !processor.checkAsyncTimeoutGeneration())) {
                 // This is effectively a NO-OP
@@ -710,7 +711,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                 // longer a processor associated with this socket.
                 return SocketState.CLOSED;
             }
-
+            //一个threadLocal，装着一个Boolean类型，设置为true
             ContainerThreadMarker.set();
 
             try {
@@ -720,6 +721,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                         UpgradeProtocol upgradeProtocol =
                                 getProtocol().getNegotiatedProtocol(negotiatedProtocol);
                         if (upgradeProtocol != null) {
+                            //升级协议
                             processor = upgradeProtocol.getProcessor(
                                     wrapper, getProtocol().getAdapter());
                         } else if (negotiatedProtocol.equals("http/1.1")) {
@@ -751,6 +753,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                     }
                 }
                 if (processor == null) {
+                    //缓存取一个
                     processor = recycledProcessors.pop();
                     if (getLog().isDebugEnabled()) {
                         getLog().debug(sm.getString("abstractConnectionHandler.processorPop",
@@ -758,6 +761,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                     }
                 }
                 if (processor == null) {
+                    //缓存都没有，只能新建
                     processor = getProtocol().createProcessor();
                     register(processor);//注册到JMX
                 }
@@ -772,7 +776,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                 do {
                     state = processor.process(wrapper, status);
 
-                    if (state == SocketState.UPGRADING) {
+                    if (state == SocketState.UPGRADING) {//升级协议
                         // Get the HTTP upgrade handler
                         UpgradeToken upgradeToken = processor.getUpgradeToken();
                         // Retrieve leftover input
